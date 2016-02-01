@@ -62,6 +62,7 @@ extern "C"
 /* process is the default */
 #define PTHREAD_SCOPE_PROCESS 0
 #define PTHREAD_SCOPE_SYSTEM 1
+#define PTHREAD_BARRIER_SERIAL_THREAD (-1)
 
 /* Register Fork Handlers */
 int pthread_atfork (void (*)(void), void (*)(void), void (*)(void));

@@ -3869,3 +3869,222 @@ pthread_null::getsequence_np ()
 }
 
 pthread_null pthread_null::_instance;
+
+
+
+#define LIKELY(X) __builtin_expect (!!(X), 1)
+#define UNLIKELY(X) __builtin_expect (!!(X), 0)
+
+
+struct pthread_barrierattr_t_struct
+{
+  unsigned magic;
+  int shared;
+};
+
+typedef struct pthread_barrierattr_t_struct pthread_barrierattr_t;
+
+unsigned const PTHREAD_BARRIERATTR_MAGIC
+= ((0xBAu << 24)
+   | (((unsigned)(unsigned char)'R') << 16)
+   | (((unsigned)(unsigned char)'R') <<  8)
+   | 0x1Au);
+
+
+extern "C"
+int
+pthread_barrierattr_init (pthread_barrierattr_t * battr)
+{
+  if (UNLIKELY (battr == NULL))
+    return EINVAL;
+
+  battr->shared = PTHREAD_PROCESS_PRIVATE;
+  battr->magic = PTHREAD_BARRIERATTR_MAGIC;
+  return 0;
+}
+
+
+extern "C"
+int
+pthread_barrierattr_setpshared (pthread_barrierattr_t * battr, int shared)
+{
+  if (UNLIKELY (battr == NULL
+                || battr->magic != PTHREAD_BARRIERATTR_MAGIC))
+    return EINVAL;
+
+  if (UNLIKELY (shared != PTHREAD_PROCESS_SHARED
+                && shared != PTHREAD_PROCESS_PRIVATE))
+    return EINVAL;
+
+  battr->shared = shared;
+  return 0;
+}
+
+
+extern "C"
+int
+pthread_barrierattr_getpshared (const pthread_barrierattr_t * restrict
+                                     battr,
+                                     int * restrict shared)
+{
+  if (UNLIKELY (battr == NULL
+                || battr->magic != PTHREAD_BARRIERATTR_MAGIC
+                || shared == NULL))
+    return EINVAL;
+
+  *shared = battr->shared;
+  return 0;
+}
+
+
+extern "C"
+int
+pthread_barrierattr_destroy (pthread_barrierattr_t * battr)
+{
+  if (UNLIKELY (battr == NULL
+                || battr->magic != PTHREAD_BARRIERATTR_MAGIC))
+    return EINVAL;
+
+  battr->magic = 0;
+  return 0;
+}
+
+
+struct pthread_barrier_t_struct
+{
+  unsigned magic;
+  pthread_mutex_t mtx; /* Mutex protecting everything below. */
+  pthread_cond_t cond; /* Conditional variable to wait on. */
+  unsigned cnt; /* Barrier count. Threads to wait for. */
+  uint64_t cyc; /* Cycle count. */
+  unsigned wt; /* Already waiting threads count. */
+};
+
+typedef struct pthread_barrier_t_struct pthread_barrier_t;
+
+unsigned const PTHREAD_BARRIER_MAGIC
+= ((0xBAu << 24)
+   | (((unsigned)(unsigned char)'R') << 16)
+   | (((unsigned)(unsigned char)'R') <<  8)
+   | 0x1Eu)
+
+
+extern "C"
+int
+pthread_barrier_init (pthread_barrier_t * bar,
+                      const pthread_barrierattr_t * attr, unsigned count)
+{
+  pthread_mutex_t * mutex = NULL;
+
+  if (UNLIKELY (bar == NULL
+                || (attr != NULL
+                    && (attr->magic != PTHREAD_BARRIERATTR_MAGIC
+                        || attr->shared == PTHREAD_PROCESS_SHARED))
+                || count == 0))
+    return EINVAL;
+
+  int retval = pthread_mutex_init (&bar->mtx, NULL);
+  if (UNLIKELY(retval != 0))
+    return retval;
+
+  retval = pthread_cond_init (&bar->cond, NULL);
+  if (UNLIKELY(retval != 0))
+    {
+      (void)pthread_mutex_destroy (mutex);
+      return retval;
+    }
+
+  bar->cnt = count;
+  bar->cyc = 0;
+  bar->wt = 0;
+  bar->magic = PTHREAD_BARRIER_MAGIC;
+  return 0;
+}
+
+
+extern "C"
+int
+pthread_barrier_destroy (pthread_barrier_t * bar)
+{
+  if (UNLIKELY (bar == NULL
+                || bar->magic != PTHREAD_BARRIER_MAGIC))
+    return EINVAL;
+
+  if (UNLIKELY (bar->wt != 0))
+    return EBUSY;
+
+  int retval = pthread_cond_destroy (&bar->cond);
+  if (UNLIKELY (retval != 0))
+    return retval;
+
+  retval = pthread_mutex_destroy (&bar->mtx);
+  if (UNLIKELY (retval != 0))
+    return retval;
+
+  bar->cnt = 0;
+  bar->cyc = 0;
+  bar->wt = 0;
+  bar->magic = 0;
+  return 0;
+}
+
+
+extern "C"
+int
+pthread_barrier_wait (pthread_barrier_t * bar)
+{
+  if (UNLIKELY (bar == NULL
+                || bar->magic != PTHREAD_BARRIER_MAGIC))
+    return EINVAL;
+
+  int retval = pthread_mutex_lock (&bar->mtx);
+  if (UNLIKELY (retval != 0))
+    return retval;
+
+  if (UNLIKELY (bar->wt >= bar->cnt))
+      abort ();
+
+  if (UNLIKELY (++bar->wt == bar->cnt))
+    {
+      ++bar->cyc;
+      /* This is the last thread to reach the barrier. Signal the waiting
+         threads to wake up and continue.  */
+      retval = pthread_cond_broadcast (&bar->cond);
+      if (UNLIKELY (retval != 0))
+        goto cond_error;
+
+      bar->wt = 0;
+      retval = pthread_mutex_unlock (&bar->mtx);
+      if (UNLIKELY (retval != 0))
+        abort ();
+
+      return PTHREAD_BARRIER_SERIAL_THREAD;
+    }
+  else
+    {
+      uint64_t cycle = bar->cyc;
+      do
+        {
+          retval = pthread_cond_wait (&bar->cond, &bar->mtx);
+          if (UNLIKELY (retval != 0))
+            goto cond_error;
+        }
+      while (UNLIKELY (cycle == bar->cyc));
+
+      retval = pthread_mutex_unlock (&bar->mtx);
+      if (UNLIKELY (retval != 0))
+        abort ();
+
+      return 0;
+    }
+
+ cond_error:
+  {
+    --bar->wt;
+    int ret = pthread_mutex_unlock (&bar->mtx);
+    if (UNLIKELY (ret != 0))
+      abort ();
+
+    return retval;
+  }
+}
