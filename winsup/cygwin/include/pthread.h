@@ -134,6 +134,17 @@ int pthread_condattr_init (pthread_condattr_t *);
 int pthread_condattr_setclock (pthread_condattr_t *, clockid_t);
 int pthread_condattr_setpshared (pthread_condattr_t *, int);
 
+/* Barriers */
+int pthread_barrierattr_init (pthread_barrierattr_t *);
+int pthread_barrierattr_setpshared (pthread_barrierattr_t *, int);
+int pthread_barrierattr_getpshared (const pthread_barrierattr_t *, int *);
+int pthread_barrierattr_destroy (pthread_barrierattr_t *);
+int pthread_barrier_init (pthread_barrier_t *,
+                          const pthread_barrierattr_t *, unsigned);
+int pthread_barrier_destroy (pthread_barrier_t *);
+int pthread_barrier_wait (pthread_barrier_t *);
+
+/* Threads */
 int pthread_create (pthread_t *, const pthread_attr_t *,
 		    void *(*)(void *), void *);
 int pthread_detach (pthread_t);
