@@ -3927,8 +3927,7 @@ extern "C"
 int
 pthread_barrierattr_init (pthread_barrierattr_t * battr)
 {
-  if (UNLIKELY (battr == NULL)
-      || pthread_barrierattr::is_good_object (battr))
+  if (UNLIKELY (battr == NULL))
     return EINVAL;
 
   *battr = new pthread_barrierattr;
@@ -3985,8 +3984,7 @@ int
 pthread_barrier_init (pthread_barrier_t * bar,
                       const pthread_barrierattr_t * attr, unsigned count)
 {
-  if (UNLIKELY (bar == NULL
-                || pthread_barrier::is_good_object (bar)))
+  if (UNLIKELY (bar == NULL))
     return EINVAL;
 
   *bar = new pthread_barrier;
@@ -4000,8 +3998,8 @@ pthread_barrier::init (const pthread_barrierattr_t * attr, unsigned count)
   pthread_mutex_t * mutex = NULL;
 
   if (UNLIKELY ((attr != NULL
-                 || ! pthread_barrierattr::is_good_object (attr)
-                 || (*attr)->shared == PTHREAD_PROCESS_SHARED)
+                 && (! pthread_barrierattr::is_good_object (attr)
+                     || (*attr)->shared == PTHREAD_PROCESS_SHARED))
                 || count == 0))
     return EINVAL;
 
