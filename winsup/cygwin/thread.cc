@@ -3918,16 +3918,11 @@ pthread_null::getsequence_np ()
 pthread_null pthread_null::_instance;
 
 
-
-#define LIKELY(X) __builtin_expect (!!(X), 1)
-#define UNLIKELY(X) __builtin_expect (!!(X), 0)
-
-
 extern "C"
 int
 pthread_barrierattr_init (pthread_barrierattr_t * battr)
 {
-  if (UNLIKELY (battr == NULL))
+  if (unlikely (battr == NULL))
     return EINVAL;
 
   *battr = new pthread_barrierattr;
@@ -3941,10 +3936,10 @@ extern "C"
 int
 pthread_barrierattr_setpshared (pthread_barrierattr_t * battr, int shared)
 {
-  if (UNLIKELY (! pthread_barrierattr::is_good_object (battr)))
+  if (unlikely (! pthread_barrierattr::is_good_object (battr)))
     return EINVAL;
 
-  if (UNLIKELY (shared != PTHREAD_PROCESS_SHARED
+  if (unlikely (shared != PTHREAD_PROCESS_SHARED
                 && shared != PTHREAD_PROCESS_PRIVATE))
     return EINVAL;
 
@@ -3958,7 +3953,7 @@ int
 pthread_barrierattr_getpshared (const pthread_barrierattr_t * battr,
                                 int * shared)
 {
-  if (UNLIKELY (! pthread_barrierattr::is_good_object (battr)
+  if (unlikely (! pthread_barrierattr::is_good_object (battr)
                 || shared == NULL))
     return EINVAL;
 
@@ -3971,7 +3966,7 @@ extern "C"
 int
 pthread_barrierattr_destroy (pthread_barrierattr_t * battr)
 {
-  if (UNLIKELY (! pthread_barrierattr::is_good_object (battr)))
+  if (unlikely (! pthread_barrierattr::is_good_object (battr)))
     return EINVAL;
 
   delete_and_clear (battr);
@@ -3984,7 +3979,7 @@ int
 pthread_barrier_init (pthread_barrier_t * bar,
                       const pthread_barrierattr_t * attr, unsigned count)
 {
-  if (UNLIKELY (bar == NULL))
+  if (unlikely (bar == NULL))
     return EINVAL;
 
   *bar = new pthread_barrier;
@@ -3997,18 +3992,18 @@ pthread_barrier::init (const pthread_barrierattr_t * attr, unsigned count)
 {
   pthread_mutex_t * mutex = NULL;
 
-  if (UNLIKELY ((attr != NULL
+  if (unlikely ((attr != NULL
                  && (! pthread_barrierattr::is_good_object (attr)
                      || (*attr)->shared == PTHREAD_PROCESS_SHARED))
                 || count == 0))
     return EINVAL;
 
   int retval = pthread_mutex_init (&mtx, NULL);
-  if (UNLIKELY (retval != 0))
+  if (unlikely (retval != 0))
     return retval;
 
   retval = pthread_cond_init (&cond, NULL);
-  if (UNLIKELY (retval != 0))
+  if (unlikely (retval != 0))
     {
       int ret = pthread_mutex_destroy (mutex);
       if (ret != 0)
@@ -4030,7 +4025,7 @@ extern "C"
 int
 pthread_barrier_destroy (pthread_barrier_t * bar)
 {
-  if (UNLIKELY (! pthread_barrier::is_good_object (bar)))
+  if (unlikely (! pthread_barrier::is_good_object (bar)))
     return EINVAL;
 
   int ret;
@@ -4045,17 +4040,17 @@ pthread_barrier_destroy (pthread_barrier_t * bar)
 int
 pthread_barrier::destroy ()
 {
-  if (UNLIKELY (wt != 0))
+  if (unlikely (wt != 0))
     return EBUSY;
 
   int retval = pthread_cond_destroy (&cond);
-  if (UNLIKELY (retval != 0))
+  if (unlikely (retval != 0))
     return retval;
   else
     cond = NULL;
 
   retval = pthread_mutex_destroy (&mtx);
-  if (UNLIKELY (retval != 0))
+  if (unlikely (retval != 0))
     return retval;
   else
     mtx = NULL;
@@ -4072,7 +4067,7 @@ extern "C"
 int
 pthread_barrier_wait (pthread_barrier_t * bar)
 {
-  if (UNLIKELY (! pthread_barrier::is_good_object (bar)))
+  if (unlikely (! pthread_barrier::is_good_object (bar)))
     return EINVAL;
 
   return (*bar)->wait ();
@@ -4083,27 +4078,27 @@ int
 pthread_barrier::wait ()
 {
   int retval = pthread_mutex_lock (&mtx);
-  if (UNLIKELY (retval != 0))
+  if (unlikely (retval != 0))
     return retval;
 
-  if (UNLIKELY (wt >= cnt))
+  if (unlikely (wt >= cnt))
     {
       api_fatal ("wt >= cnt (%u >= %u)", wt, cnt);
       return EINVAL;
     }
 
-  if (UNLIKELY (++wt == cnt))
+  if (unlikely (++wt == cnt))
     {
       ++cyc;
       /* This is the last thread to reach the barrier. Signal the waiting
          threads to wake up and continue.  */
       retval = pthread_cond_broadcast (&cond);
-      if (UNLIKELY (retval != 0))
+      if (unlikely (retval != 0))
         goto cond_error;
 
       wt = 0;
       retval = pthread_mutex_unlock (&mtx);
-      if (UNLIKELY (retval != 0))
+      if (unlikely (retval != 0))
         abort ();
 
       return PTHREAD_BARRIER_SERIAL_THREAD;
@@ -4114,13 +4109,13 @@ pthread_barrier::wait ()
       do
         {
           retval = pthread_cond_wait (&cond, &mtx);
-          if (UNLIKELY (retval != 0))
+          if (unlikely (retval != 0))
             goto cond_error;
         }
-      while (UNLIKELY (cycle == cyc));
+      while (unlikely (cycle == cyc));
 
       retval = pthread_mutex_unlock (&mtx);
-      if (UNLIKELY (retval != 0))
+      if (unlikely (retval != 0))
         api_fatal ("pthread_mutex_unlock (%p) = %d", &mtx, retval);
 
       return 0;
@@ -4130,7 +4125,7 @@ pthread_barrier::wait ()
   {
     --wt;
     int ret = pthread_mutex_unlock (&mtx);
-    if (UNLIKELY (ret != 0))
+    if (unlikely (ret != 0))
         api_fatal ("pthread_mutex_unlock (%p) = %d", &mtx, ret);
 
     return retval;
