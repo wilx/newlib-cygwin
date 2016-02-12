@@ -52,7 +52,7 @@ const pthread_t pthread_mutex::_destroyed_mutex = (pthread_t) 3;
 
 
 template <typename T>
-inline
+static inline
 void
 delete_and_clear (T * * const ptr)
 {
