@@ -245,7 +245,7 @@ pselect(int maxfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
   struct timeval tv;
   sigset_t oldset = _my_tls.sigmask;
 
-  __try
+  __cygtry
     {
       if (ts)
 	{
@@ -260,8 +260,8 @@ pselect(int maxfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
 	set_signal_mask (_my_tls.sigmask, oldset);
       return ret;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 

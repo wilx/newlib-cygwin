@@ -34,6 +34,7 @@ details. */
 #include "ntdll.h"
 #include "cygwait.h"
 
+
 extern "C" void __fp_lock_all ();
 extern "C" void __fp_unlock_all ();
 extern "C" int valid_sched_parameters(const struct sched_param *);
@@ -134,10 +135,10 @@ verifyable_object_isvalid (void const *objectptr, thread_magic_t magic, void *st
 {
   verifyable_object_state state = INVALID_OBJECT;
 
-  __try
+  __cygtry
     {
       if (!objectptr || !(*(const char **) objectptr))
-	__leave;
+	__cygleave;
 
       verifyable_object **object = (verifyable_object **) objectptr;
 
@@ -148,8 +149,8 @@ verifyable_object_isvalid (void const *objectptr, thread_magic_t magic, void *st
       else if ((*object)->magic == magic)
 	state = VALID_OBJECT;
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
   return state;
 }
 
@@ -2716,16 +2717,16 @@ pthread_cond::init (pthread_cond_t *cond, const pthread_condattr_t *attr)
 
   int ret = 0;
 
-  __try
+  __cygtry
     {
       *cond = new_cond;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       delete new_cond;
       ret = EINVAL;
     }
-  __endtry
+  __cygendtry
   cond_initialization_lock.unlock ();
   return ret;
 }
@@ -2781,7 +2782,7 @@ pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       int err = __pthread_cond_wait_init (cond, mutex);
       if (err)
@@ -2791,7 +2792,7 @@ pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
       if (abstime->tv_sec < 0
 	  || abstime->tv_nsec < 0
 	  || abstime->tv_nsec > 999999999)
-	__leave;
+	__cygleave;
 
       clock_gettime ((*cond)->clock_id, &tp);
 
@@ -2817,8 +2818,8 @@ pthread_cond_timedwait (pthread_cond_t *cond, pthread_mutex_t *mutex,
 	}
       return (*cond)->wait (*mutex, &timeout);
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
   return EINVAL;
 }
 
@@ -2946,16 +2947,16 @@ pthread_rwlock::init (pthread_rwlock_t *rwlock, const pthread_rwlockattr_t *attr
 
   int ret = 0;
 
-  __try
+  __cygtry
     {
       *rwlock = new_rwlock;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       delete new_rwlock;
       ret = EINVAL;
     }
-  __endtry
+  __cygendtry
   rwlock_initialization_lock.unlock ();
   return ret;
 }
@@ -3173,17 +3174,17 @@ pthread_mutex::init (pthread_mutex_t *mutex,
 	    new_mutex->type = PTHREAD_MUTEX_ERRORCHECK;
 	}
 
-      __try
+      __cygtry
 	{
 	  *mutex = new_mutex;
 	}
-      __except (NO_ERROR)
+      __cygexcept (NO_ERROR)
 	{
 	  delete new_mutex;
 	  mutex_initialization_lock.unlock ();
 	  return EINVAL;
 	}
-      __endtry
+      __cygendtry
     }
   mutex_initialization_lock.unlock ();
   pthread_printf ("*mutex %p, attr %p, initializer %p", *mutex, attr, initializer);
@@ -3272,16 +3273,16 @@ pthread_spinlock::init (pthread_spinlock_t *spinlock, int pshared)
       return EAGAIN;
     }
 
-  __try
+  __cygtry
     {
       *spinlock = new_spinlock;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       delete new_spinlock;
       return EINVAL;
     }
-  __endtry
+  __cygendtry
   pthread_printf ("*spinlock %p, pshared %d", *spinlock, pshared);
   return 0;
 }
@@ -3545,7 +3546,7 @@ semaphore::_timedwait (const struct timespec *abstime)
 {
   LARGE_INTEGER timeout;
 
-  __try
+  __cygtry
     {
       timeout.QuadPart = abstime->tv_sec * NSPERSEC
 			 + (abstime->tv_nsec + 99) / 100 + FACTOR;
@@ -3567,7 +3568,7 @@ semaphore::_timedwait (const struct timespec *abstime)
 	  return -1;
 	}
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       /* According to SUSv3, abstime need not be checked for validity,
 	 if the semaphore can be locked immediately. */
@@ -3577,7 +3578,7 @@ semaphore::_timedwait (const struct timespec *abstime)
 	  return -1;
 	}
     }
-  __endtry
+  __cygendtry
   return 0;
 }
 
@@ -3809,13 +3810,13 @@ semaphore::post (sem_t *sem)
 int
 semaphore::getvalue (sem_t *sem, int *sval)
 {
-  __try
+  __cygtry
     {
       if (is_good_object (sem))
 	return (*sem)->_getvalue (sval);
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
   set_errno (EINVAL);
   return -1;
 }
@@ -3824,12 +3825,12 @@ int
 semaphore::getinternal (sem_t *sem, int *sfd, unsigned long long *shash,
 			LUID *sluid, unsigned int *sval)
 {
-  __try
+  __cygtry
     {
       if (!is_good_object (sem))
-	__leave;
+	__cygleave;
       if ((*sfd = (*sem)->fd) < 0)
-	__leave;
+	__cygleave;
       *shash = (*sem)->hash;
       *sluid = (*sem)->luid;
       /* POSIX defines the value in calls to sem_init/sem_open as unsigned,
@@ -3837,8 +3838,8 @@ semaphore::getinternal (sem_t *sem, int *sfd, unsigned long long *shash,
 	 Go figure! */
       return (*sem)->_getvalue ((int *)sval);
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
   set_errno (EINVAL);
   return -1;
 }

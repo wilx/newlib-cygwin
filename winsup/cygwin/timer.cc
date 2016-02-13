@@ -221,16 +221,16 @@ timer_tracker::settime (int in_flags, const itimerspec *value, itimerspec *ovalu
 {
   int ret = -1;
 
-  __try
+  __cygtry
     {
       if (!value)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       if (it_bad (value->it_value) || it_bad (value->it_interval))
-	__leave;
+	__cygleave;
 
       long long now = in_flags & TIMER_ABSTIME ? 0 : gtod.usecs ();
 
@@ -259,8 +259,8 @@ timer_tracker::settime (int in_flags, const itimerspec *value, itimerspec *ovalu
 	}
       ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -286,7 +286,7 @@ timer_gettime (timer_t timerid, struct itimerspec *ovalue)
 {
   int ret = -1;
 
-  __try
+  __cygtry
     {
       timer_tracker *tt = (timer_tracker *) timerid;
       if (tt->magic != TT_MAGIC)
@@ -298,8 +298,8 @@ timer_gettime (timer_t timerid, struct itimerspec *ovalue)
       tt->gettime (ovalue);
       ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -309,7 +309,7 @@ timer_create (clockid_t clock_id, struct sigevent *__restrict evp,
 {
   int ret = -1;
 
-  __try
+  __cygtry
     {
       if (CLOCKID_IS_PROCESS (clock_id) || CLOCKID_IS_THREAD (clock_id))
 	{
@@ -326,8 +326,8 @@ timer_create (clockid_t clock_id, struct sigevent *__restrict evp,
       *timerid = (timer_t) new timer_tracker (clock_id, evp);
       ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -338,18 +338,18 @@ timer_settime (timer_t timerid, int flags,
 {
   int ret = -1;
 
-  __try
+  __cygtry
     {
       timer_tracker *tt = (timer_tracker *) timerid;
       if (tt->magic != TT_MAGIC)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       ret = tt->settime (flags, value, ovalue);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -358,13 +358,13 @@ timer_delete (timer_t timerid)
 {
   int ret = -1;
 
-  __try
+  __cygtry
     {
       timer_tracker *in_tt = (timer_tracker *) timerid;
       if (in_tt->magic != TT_MAGIC)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       lock_timer_tracker here;
@@ -374,13 +374,13 @@ timer_delete (timer_t timerid)
 	    tt->next = in_tt->next;
 	    delete in_tt;
 	    ret = 0;
-	    __leave;
+	    __cygleave;
 	  }
       set_errno (EINVAL);
       ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -440,7 +440,7 @@ getitimer (int which, struct itimerval *ovalue)
     set_errno (EINVAL);
   else
     {
-      __try
+      __cygtry
 	{
 	  struct itimerspec spec_ovalue;
 	  ret = timer_gettime ((timer_t) &ttstart, &spec_ovalue);
@@ -452,8 +452,8 @@ getitimer (int which, struct itimerval *ovalue)
 	      ovalue->it_value.tv_usec = spec_ovalue.it_value.tv_nsec / 1000;
 	    }
 	}
-      __except (EFAULT) {}
-      __endtry
+      __cygexcept (EFAULT) {}
+      __cygendtry
     }
   syscall_printf ("%R = getitimer()", ret);
   return ret;

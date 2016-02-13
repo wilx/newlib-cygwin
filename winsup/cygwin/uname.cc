@@ -24,7 +24,7 @@ uname (struct utsname *name)
 {
   SYSTEM_INFO sysinfo;
 
-  __try
+  __cygtry
     {
       char *snp = strstr  (cygwin_version.dll_build_date, "SNP");
 
@@ -91,10 +91,10 @@ uname (struct utsname *name)
 	    break;
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       return -1;
     }
-  __endtry
+  __cygendtry
   return 0;
 }

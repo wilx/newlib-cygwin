@@ -2378,7 +2378,7 @@ fhandler_socket::getpeereid (pid_t *pid, uid_t *euid, gid_t *egid)
       return -1;
     }
 
-  __try
+  __cygtry
     {
       if (pid)
 	*pid = sec_peer_pid;
@@ -2388,7 +2388,7 @@ fhandler_socket::getpeereid (pid_t *pid, uid_t *euid, gid_t *egid)
 	*egid = sec_peer_gid;
       return 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }

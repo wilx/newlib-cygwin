@@ -85,19 +85,19 @@ semctl (int semid, int semnum, int cmd, ...)
     }
   syscall_printf ("semctl (semid = %d, semnum = %d, cmd = %d, arg = %p)",
 		  semid, semnum, cmd, arg.buf);
-  __try
+  __cygtry
     {
       client_request_sem request (semid, semnum, cmd, &arg);
       if (request.make_request () == -1 || request.retval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = semctl ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       return request.retval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -121,18 +121,18 @@ semop (int semid, struct sembuf *sops, size_t nsops)
 {
   syscall_printf ("semop (semid = %d, sops = %p, nsops = %ld)",
 		  semid, sops, nsops);
-  __try
+  __cygtry
     {
       client_request_sem request (semid, sops, nsops);
       if (request.make_request () == -1 || request.retval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = semop ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       return request.retval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }

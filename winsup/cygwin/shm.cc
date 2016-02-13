@@ -258,14 +258,14 @@ shmctl (int shmid, int cmd, struct shmid_ds *buf)
 {
   syscall_printf ("shmctl (shmid = %d, cmd = %d, buf = %p)",
 		  shmid, cmd, buf);
-  __try
+  __cygtry
     {
       client_request_shm request (shmid, cmd, buf);
       if (request.make_request () == -1 || request.retval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = shmctl ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       if (cmd == IPC_RMID)
 	{
@@ -292,8 +292,8 @@ shmctl (int shmid, int cmd, struct shmid_ds *buf)
 	}
       return request.retval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 

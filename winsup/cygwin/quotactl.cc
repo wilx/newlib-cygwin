@@ -143,23 +143,23 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 					     FileFsControlInformation);
 	break;
       case Q_GETFMT:
-      	__try
+      	__cygtry
 	  {
 	    uint32_t *retval = (uint32_t *) addr;
 
 	    /* Always fake the latest format. */
 	    *retval = QFMT_VFS_V1;
 	  }
-	__except (EFAULT)
+	__cygexcept (EFAULT)
 	  {
 	    ret = -1;
 	    break;
 	  }
-	__endtry
+	__cygendtry
 	status = STATUS_SUCCESS;
 	break;
       case Q_GETINFO:
-	__try
+	__cygtry
 	  {
 	    struct dqinfo *dqi = (struct dqinfo *) addr;
 
@@ -167,12 +167,12 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 	    dqi->dqi_flags = 0;
 	    dqi->dqi_valid = IIF_BGRACE | IIF_IGRACE;
 	  }
-	__except (EFAULT)
+	__cygexcept (EFAULT)
 	  {
 	    ret = -1;
 	    break;
 	  }
-	__endtry
+	__cygendtry
 	status = STATUS_SUCCESS;
 	break;
       case Q_SETINFO:
@@ -187,7 +187,7 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 						   FileFsControlInformation);
 	    if (!NT_SUCCESS (status))
 	      break;
-	    __try
+	    __cygtry
 	      {
 		struct dqblk *dq = (struct dqblk *) addr;
 
@@ -206,12 +206,12 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 		dq->dqb_itime = UINT64_MAX;
 		dq->dqb_valid = QIF_BLIMITS;
 	      }
-	    __except (EFAULT)
+	    __cygexcept (EFAULT)
 	      {
 		ret = -1;
 		break;
 	      }
-	    __endtry
+	    __cygendtry
 	  }
 	else
 	  {
@@ -228,7 +228,7 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 						  NULL, TRUE);
 	    if (!NT_SUCCESS (status))
 	      break;
-	    __try
+	    __cygtry
 	      {
 		struct dqblk *dq = (struct dqblk *) addr;
 
@@ -248,12 +248,12 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 		dq->dqb_itime = UINT64_MAX;
 		dq->dqb_valid = QIF_BLIMITS | QIF_SPACE;
 	      }
-	    __except (EFAULT)
+	    __cygexcept (EFAULT)
 	      {
 		ret = -1;
 		break;
 	      }
-	    __endtry
+	    __cygendtry
 	  }
 	break;
       case Q_SETQUOTA:
@@ -264,7 +264,7 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 						   FileFsControlInformation);
 	    if (!NT_SUCCESS (status))
 	      break;
-	    __try
+	    __cygtry
 	      {
 		struct dqblk *dq = (struct dqblk *) addr;
 
@@ -277,12 +277,12 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 		if (ffci.DefaultQuotaThreshold.QuadPart != -1)
 		  ffci.DefaultQuotaThreshold.QuadPart *= BLOCK_SIZE;
 	      }
-	    __except (EFAULT)
+	    __cygexcept (EFAULT)
 	      {
 	        ret = -1;
 		break;
 	      }
-	    __endtry
+	    __cygendtry
 	    status = NtSetVolumeInformationFile (fh, &io, &ffci, sizeof ffci,
 						 FileFsControlInformation);
 	  }
@@ -301,7 +301,7 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 						  NULL, TRUE);
 	    if (!NT_SUCCESS (status))
 	      break;
-	    __try
+	    __cygtry
 	      {
 		struct dqblk *dq = (struct dqblk *) addr;
 
@@ -314,12 +314,12 @@ quotactl (int cmd, const char *special, int id, caddr_t addr)
 		if (pfqi->QuotaThreshold.QuadPart != -1)
 		  pfqi->QuotaThreshold.QuadPart *= BLOCK_SIZE;
 	      }
-	    __except (EFAULT)
+	    __cygexcept (EFAULT)
 	      {
 		ret = -1;
 		break;
 	      }
-	    __endtry
+	    __cygendtry
 	    status = NtSetQuotaInformationFile (fh, &io, pfqi, PFQI_SIZE);
 	  }
 	break;

@@ -28,7 +28,7 @@ fcntl64 (int fd, int cmd, ...)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
 
       debug_printf ("fcntl(%d, %d, ...)", fd, cmd);
@@ -36,7 +36,7 @@ fcntl64 (int fd, int cmd, ...)
       /* Don't lock the fd table when performing locking calls. */
       cygheap_fdget cfd (fd, cmd < F_GETLK || cmd > F_SETLKW);
       if (cfd < 0)
-	__leave;
+	__cygleave;
 
       /* FIXME?  All numerical args to fcntl are defined as long on Linux.
 	 This relies on a really dirty trick on x86_64:  A 32 bit mov to
@@ -76,8 +76,8 @@ fcntl64 (int fd, int cmd, ...)
 	  break;
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = fcntl(%d, %d, %ly)", res, fd, cmd, arg);
   return res;
 }
@@ -94,7 +94,7 @@ _fcntl (int fd, int cmd, ...)
   struct __flock32 *src = NULL;
   struct flock dst;
 
-  __try
+  __cygtry
     {
       va_start (args, cmd);
       arg = va_arg (args, intptr_t);
@@ -120,8 +120,8 @@ _fcntl (int fd, int cmd, ...)
 	}
       return res;
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   return -1;
 }
 #endif

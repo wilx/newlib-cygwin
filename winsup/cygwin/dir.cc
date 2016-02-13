@@ -28,15 +28,15 @@ details. */
 extern "C" int
 dirfd (DIR *dir)
 {
-  __try
+  __cygtry
     {
       if (dir->__d_cookie == __DIRENT_COOKIE)
 	return dir->__d_fd;
       syscall_printf ("-1 = dirfd (%p)", dir);
       set_errno (EINVAL);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -95,13 +95,13 @@ readdir_worker (DIR *dir, dirent *de)
 {
   int res = 0;
 
-  __try
+  __cygtry
     {
       if (dir->__d_cookie != __DIRENT_COOKIE)
 	{
 	  syscall_printf ("%p = readdir (%p)", NULL, dir);
 	  res = EBADF;
-	  __leave;
+	  __cygleave;
 	}
 
       de->d_ino = 0;
@@ -168,11 +168,11 @@ readdir_worker (DIR *dir, dirent *de)
 	 build under Cygwin before 1.5.x. */
       de->__d_internal1 = de->d_ino;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       res = EFAULT;
     }
-  __endtry
+  __cygendtry
   return res;
 }
 
@@ -207,14 +207,14 @@ readdir_r (DIR *__restrict dir, dirent *__restrict de, dirent **__restrict ode)
 extern "C" long
 telldir (DIR *dir)
 {
-  __try
+  __cygtry
     {
       if (dir->__d_cookie == __DIRENT_COOKIE)
 	return ((fhandler_base *) dir->__fh)->telldir (dir);
       set_errno (EBADF);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -231,7 +231,7 @@ telldir64 (DIR *dir)
 extern "C" void
 seekdir (DIR *dir, long loc)
 {
-  __try
+  __cygtry
     {
       if (dir->__d_cookie == __DIRENT_COOKIE)
 	{
@@ -240,8 +240,8 @@ seekdir (DIR *dir, long loc)
 	}
       set_errno (EINVAL);	/* Diagnosis */
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
 }
 
 /* seekdir was never defined using off_t in POSIX, only in early versions
@@ -257,7 +257,7 @@ seekdir64 (DIR *dir, off_t loc)
 extern "C" void
 rewinddir (DIR *dir)
 {
-  __try
+  __cygtry
     {
       if (dir->__d_cookie == __DIRENT_COOKIE)
 	{
@@ -266,15 +266,15 @@ rewinddir (DIR *dir)
 	}
       set_errno (EINVAL);	/* Diagnosis */
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
 }
 
 /* closedir: POSIX 5.1.2.1 */
 extern "C" int
 closedir (DIR *dir)
 {
-  __try
+  __cygtry
     {
       if (dir->__d_cookie == __DIRENT_COOKIE)
 	{
@@ -292,8 +292,8 @@ closedir (DIR *dir)
 	}
       set_errno (EBADF);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = closedir(%p)", -1, dir);
   return -1;
 }
@@ -306,7 +306,7 @@ mkdir (const char *dir, mode_t mode)
   fhandler_base *fh = NULL;
   tmp_pathbuf tp;
 
-  __try
+  __cygtry
     {
       /* POSIX says mkdir("symlink-to-missing/") should create the
 	 directory "missing", but Linux rejects it with EEXIST.  Copy
@@ -315,7 +315,7 @@ mkdir (const char *dir, mode_t mode)
       if (!*dir)
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
       if (isdirsep (dir[strlen (dir) - 1]))
 	{
@@ -327,7 +327,7 @@ mkdir (const char *dir, mode_t mode)
 	    *p-- = '\0';
 	}
       if (!(fh = build_fh_name (dir, PC_SYM_NOFOLLOW)))
-	__leave;   /* errno already set */;
+	__cygleave;   /* errno already set */;
 
       if (fh->error ())
 	{
@@ -340,8 +340,8 @@ mkdir (const char *dir, mode_t mode)
 	res = 0;
       delete fh;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = mkdir(%s, %d)", res, dir, mode);
   return res;
 }
@@ -353,10 +353,10 @@ rmdir (const char *dir)
   int res = -1;
   fhandler_base *fh = NULL;
 
-  __try
+  __cygtry
     {
       if (!(fh = build_fh_name (dir, PC_SYM_NOFOLLOW)))
-	__leave;   /* errno already set */;
+	__cygleave;   /* errno already set */;
 
       if (fh->error ())
 	{
@@ -373,8 +373,8 @@ rmdir (const char *dir)
 	res = 0;
       delete fh;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = rmdir(%s)", res, dir);
   return res;
 }

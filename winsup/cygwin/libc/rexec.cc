@@ -320,7 +320,7 @@ cygwin_rexec (char **ahost, unsigned short rport, char *name, char *pass,
   char c;
   static char ahostbuf[INTERNET_MAX_HOST_NAME_LENGTH + 1];
 
-  __try
+  __cygtry
     {
       hp = cygwin_gethostbyname(*ahost);
       if (hp == 0) {
@@ -407,7 +407,7 @@ bad:
 	      (void) close(*fd2p);
       (void) close(s);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return (-1);
 }

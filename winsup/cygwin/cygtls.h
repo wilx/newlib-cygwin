@@ -366,7 +366,7 @@ public:
    32 bit we can simply set up an SJLJ handler within the myfault class. */
 #define __mem_barrier	__asm__ __volatile__ ("" ::: "memory")
 #ifdef __x86_64__
-#define __try \
+#define __cygtry \
   { \
     __label__ __l_try, __l_except, __l_endtry; \
     __mem_barrier; \
@@ -382,10 +382,10 @@ public:
       __l_try: \
 	__mem_barrier;
 
-#define __leave	\
+#define __cygleave	\
       goto __l_endtry
 
-#define __except(__errno) \
+#define __cygexcept(__errno) \
       goto __l_endtry; \
     } \
     { \
@@ -395,31 +395,31 @@ public:
 	if (__errno) \
 	  set_errno (__errno);
 
-#define __endtry \
+#define __cygendtry \
     } \
     __l_endtry: \
       __mem_barrier; \
   }
 
 #else /* !__x86_64__ */
-#define __try \
+#define __cygtry \
   { \
     __label__ __l_endtry; \
     myfault efault; \
     if (!efault.faulted ()) \
       {
 
-#define __leave	\
+#define __cygleave	\
 	goto __l_endtry
 
-#define __except(__errno) \
+#define __cygexcept(__errno) \
 	  goto __l_endtry; \
       } \
       { \
 	if (__errno) \
 	  set_errno (__errno);
 
-#define __endtry \
+#define __cygendtry \
       } \
     __l_endtry: \
       __mem_barrier; \

@@ -977,7 +977,7 @@ mtinfo_drive::set_options (HANDLE mt, int32_t options)
 int
 mtinfo_drive::ioctl (HANDLE mt, unsigned int cmd, void *buf)
 {
-  __try
+  __cygtry
     {
       if (cmd == MTIOCTOP)
 	{
@@ -1129,11 +1129,11 @@ mtinfo_drive::ioctl (HANDLE mt, unsigned int cmd, void *buf)
       else if (cmd == MTIOCPOS && !get_pos (mt))
 	((struct mtpos *) buf)->mt_blkno = (long) block;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       lasterr = ERROR_NOACCESS;
     }
-  __endtry
+  __cygendtry
   return lasterr;
 }
 

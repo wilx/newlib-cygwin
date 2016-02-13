@@ -92,7 +92,7 @@ extern "C" int
 msgctl (int msqid, int cmd, struct msqid_ds *buf)
 {
   syscall_printf ("msgctl (msqid = %d, cmd = %y, buf = %p)", msqid, cmd, buf);
-  __try
+  __cygtry
     {
       switch (cmd)
 	{
@@ -109,19 +109,19 @@ msgctl (int msqid, int cmd, struct msqid_ds *buf)
 	  default:
 	    syscall_printf ("-1 [%d] = msgctl ()", EINVAL);
 	    set_errno (EINVAL);
-	    __leave;
+	    __cygleave;
 	}
       client_request_msg request (msqid, cmd, buf);
       if (request.make_request () == -1 || request.retval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = msgctl ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       return request.retval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -145,19 +145,19 @@ msgrcv (int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)
   syscall_printf ("msgrcv (msqid = %d, msgp = %p, msgsz = %ld, "
 		  "msgtyp = %d, msgflg = %y)",
 		  msqid, msgp, msgsz, msgtyp, msgflg);
-  __try
+  __cygtry
     {
       client_request_msg request (msqid, msgp, msgsz, msgtyp, msgflg);
       if (request.make_request () == -1 || request.rcvval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = msgrcv ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       return request.rcvval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -166,18 +166,18 @@ msgsnd (int msqid, const void *msgp, size_t msgsz, int msgflg)
 {
   syscall_printf ("msgsnd (msqid = %d, msgp = %p, msgsz = %ld, msgflg = %y)",
 		  msqid, msgp, msgsz, msgflg);
-  __try
+  __cygtry
     {
       client_request_msg request (msqid, msgp, msgsz, msgflg);
       if (request.make_request () == -1 || request.retval () == -1)
 	{
 	  syscall_printf ("-1 [%d] = msgsnd ()", request.error_code ());
 	  set_errno (request.error_code ());
-	  __leave;
+	  __cygleave;
 	}
       return request.retval ();
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }

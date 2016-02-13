@@ -249,7 +249,7 @@ getprogname (void)
 extern "C" void
 setprogname (const char *newprogname)
 {
-  __try
+  __cygtry
     {
       /* Per BSD man page, setprogname keeps a pointer to the last
 	 path component of the argument.  It does *not* copy the
@@ -260,8 +260,8 @@ setprogname (const char *newprogname)
       else
 	__progname = (char *)newprogname;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
 }
 
 extern "C" void

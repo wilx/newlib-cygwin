@@ -1189,16 +1189,16 @@ read (int fd, void *ptr, size_t len)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       cygheap_fdget cfd (fd);
       if (cfd < 0)
-	__leave;
+	__cygleave;
 
       if ((cfd->get_flags () & O_ACCMODE) == O_WRONLY)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Could block, so let user know we at least got here.  */
@@ -1208,8 +1208,8 @@ read (int fd, void *ptr, size_t len)
       cfd->read (ptr, len);
       res = len;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = read(%d, %p, %d)", res, fd, ptr, len);
   MALLOC_CHECK;
   return (ssize_t) res;
@@ -1224,24 +1224,24 @@ readv (int fd, const struct iovec *const iov, const int iovcnt)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       const ssize_t tot = check_iovec_for_read (iov, iovcnt);
 
       cygheap_fdget cfd (fd);
       if (cfd < 0)
-	__leave;
+	__cygleave;
 
       if (tot <= 0)
 	{
 	  res = tot;
-	  __leave;
+	  __cygleave;
 	}
 
       if ((cfd->get_flags () & O_ACCMODE) == O_WRONLY)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Could block, so let user know we at least got here.  */
@@ -1250,8 +1250,8 @@ readv (int fd, const struct iovec *const iov, const int iovcnt)
 
       res = cfd->readv (iov, iovcnt, tot);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = readv(%d, %p, %d)", res, fd, iov, iovcnt);
   MALLOC_CHECK;
   return res;
@@ -1281,16 +1281,16 @@ write (int fd, const void *ptr, size_t len)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       cygheap_fdget cfd (fd);
       if (cfd < 0)
-	__leave;
+	__cygleave;
 
       if ((cfd->get_flags () & O_ACCMODE) == O_RDONLY)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Could block, so let user know we at least got here.  */
@@ -1301,8 +1301,8 @@ write (int fd, const void *ptr, size_t len)
 
       res = cfd->write (ptr, len);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = write(%d, %p, %d)", res, fd, ptr, len);
   MALLOC_CHECK;
   return res;
@@ -1317,24 +1317,24 @@ writev (const int fd, const struct iovec *const iov, const int iovcnt)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       const ssize_t tot = check_iovec_for_write (iov, iovcnt);
 
       cygheap_fdget cfd (fd);
       if (cfd < 0)
-	__leave;
+	__cygleave;
 
       if (tot <= 0)
 	{
 	  res = tot;
-	  __leave;
+	  __cygleave;
 	}
 
       if ((cfd->get_flags () & O_ACCMODE) == O_RDONLY)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Could block, so let user know we at least got here.  */
@@ -1345,8 +1345,8 @@ writev (const int fd, const struct iovec *const iov, const int iovcnt)
 
       res = cfd->writev (iov, iovcnt, tot);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   if (fd == 1 || fd == 2)
     paranoid_printf ("%lR = writev(%d, %p, %d)", res, fd, iov, iovcnt);
   else
@@ -1383,7 +1383,7 @@ open (const char *unix_path, int flags, ...)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       syscall_printf ("open(%s, %y)", unix_path, flags);
       if (!*unix_path)
@@ -1448,8 +1448,8 @@ open (const char *unix_path, int flags, ...)
 
       syscall_printf ("%R = open(%s, %y)", res, unix_path, flags);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -1924,7 +1924,7 @@ stat_worker (path_conv &pc, struct stat *buf)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       if (pc.error)
 	{
@@ -1936,7 +1936,7 @@ stat_worker (path_conv &pc, struct stat *buf)
 	  fhandler_base *fh;
 
 	  if (!(fh = build_fh_pc (pc)))
-	    __leave;
+	    __cygleave;
 
 	  debug_printf ("(%S, %p, %p), file_attributes %d",
 			pc.get_nt_native_path (), buf, fh, (DWORD) *fh);
@@ -1949,8 +1949,8 @@ stat_worker (path_conv &pc, struct stat *buf)
       else
 	set_errno (ENOENT);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   MALLOC_CHECK;
   syscall_printf ("%d = (%S,%p)", res, pc.get_nt_native_path (), buf);
   return res;
@@ -2142,20 +2142,20 @@ rename (const char *oldpath, const char *newpath)
   FILE_STANDARD_INFORMATION ofsi;
   PFILE_RENAME_INFORMATION pfri;
 
-  __try
+  __cygtry
     {
       if (!*oldpath || !*newpath)
 	{
 	  /* Reject rename("","x"), rename("x","").  */
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
       if (has_dot_last_component (oldpath, true))
 	{
 	  /* Reject rename("dir/.","x").  */
 	  oldpc.check (oldpath, PC_SYM_NOFOLLOW, stat_suffixes);
 	  set_errno (oldpc.isdir () ? EINVAL : ENOTDIR);
-	  __leave;
+	  __cygleave;
 	}
       if (has_dot_last_component (newpath, true))
 	{
@@ -2163,7 +2163,7 @@ rename (const char *oldpath, const char *newpath)
 	  newpc.check (newpath, PC_SYM_NOFOLLOW, stat_suffixes);
 	  set_errno (!newpc.exists () ? ENOENT
 				      : newpc.isdir () ? EINVAL : ENOTDIR);
-	  __leave;
+	  __cygleave;
 	}
 
       /* A trailing slash requires that the pathname points to an existing
@@ -2184,7 +2184,7 @@ rename (const char *oldpath, const char *newpath)
 		 the corner case of rename("/","/"), even though it is the
 		 same file.  */
 	      set_errno (EINVAL);
-	      __leave;
+	      __cygleave;
 	    }
 	  old_dir_requested = true;
 	}
@@ -2192,18 +2192,18 @@ rename (const char *oldpath, const char *newpath)
       if (oldpc.error)
 	{
 	  set_errno (oldpc.error);
-	  __leave;
+	  __cygleave;
 	}
       if (!oldpc.exists ())
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
       if (oldpc.isspecial () && !oldpc.issocket () && !oldpc.is_fs_special ())
 	{
 	  /* No renames from virtual FS */
 	  set_errno (EROFS);
-	  __leave;
+	  __cygleave;
 	}
       if (oldpc.has_attribute (FILE_ATTRIBUTE_REPARSE_POINT)
 	  && !oldpc.issymlink ())
@@ -2214,13 +2214,13 @@ rename (const char *oldpath, const char *newpath)
 	     cross-device move.  So what we do here is to treat the volume
 	     mount point just like Linux treats a mount point. */
 	  set_errno (EBUSY);
-	  __leave;
+	  __cygleave;
 	}
       if (old_dir_requested && !oldpc.isdir ())
 	{
 	  /* Reject rename("file/","x").  */
 	  set_errno (ENOTDIR);
-	  __leave;
+	  __cygleave;
 	}
       if (oldpc.known_suffix ()
 	   && (ascii_strcasematch (oldpath + olen - 4, ".lnk")
@@ -2239,7 +2239,7 @@ rename (const char *oldpath, const char *newpath)
 	  if (!nlen) /* The root directory is never empty.  */
 	    {
 	      set_errno (ENOTEMPTY);
-	      __leave;
+	      __cygleave;
 	    }
 	  new_dir_requested = true;
 	}
@@ -2247,27 +2247,27 @@ rename (const char *oldpath, const char *newpath)
       if (newpc.error)
 	{
 	  set_errno (newpc.error);
-	  __leave;
+	  __cygleave;
 	}
       if (newpc.isspecial () && !newpc.issocket ())
 	{
 	  /* No renames to virtual FSes */
 	  set_errno (EROFS);
-	  __leave;
+	  __cygleave;
 	}
       if (new_dir_requested && !(newpc.exists ()
 				 ? newpc.isdir () : oldpc.isdir ()))
 	{
 	  /* Reject rename("file1","file2/"), but allow rename("dir","d/").  */
 	  set_errno (newpc.exists () ? ENOTDIR : ENOENT);
-	  __leave;
+	  __cygleave;
 	}
       if (newpc.exists ()
 	  && (oldpc.isdir () ? !newpc.isdir () : newpc.isdir ()))
 	{
 	  /* Reject rename("file","dir") and rename("dir","file").  */
 	  set_errno (newpc.isdir () ? EISDIR : ENOTDIR);
-	  __leave;
+	  __cygleave;
 	}
       if (newpc.known_suffix ()
 	  && (ascii_strcasematch (newpath + nlen - 4, ".lnk")
@@ -2291,7 +2291,7 @@ rename (const char *oldpath, const char *newpath)
 				     FALSE))
 	    {
 	      res = 0;
-	      __leave;
+	      __cygleave;
 	    }
 	  newpc.file_attributes (INVALID_FILE_ATTRIBUTES);
 	}
@@ -2306,13 +2306,13 @@ rename (const char *oldpath, const char *newpath)
 		  == oldpc.get_nt_native_path ()->Length)
 		{
 		  res = 0;
-		  __leave;
+		  __cygleave;
 		}
 	      if (*(PWCHAR) ((PBYTE) newpc.get_nt_native_path ()->Buffer
 			     + oldpc.get_nt_native_path ()->Length) == L'\\')
 		{
 		  set_errno (EINVAL);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	}
@@ -2326,7 +2326,7 @@ rename (const char *oldpath, const char *newpath)
 					 oldpc.objcaseinsensitive ()))
 		{
 		  res = 0;
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  else if (oldpc.is_lnk_special ()
@@ -2355,7 +2355,7 @@ rename (const char *oldpath, const char *newpath)
 					 oldpc.objcaseinsensitive ()))
 		{
 		  res = 0;
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  else if (oldpc.is_lnk_special ())
@@ -2410,7 +2410,7 @@ rename (const char *oldpath, const char *newpath)
 	  || oldpc.fs_serial_number () != dstpc->fs_serial_number ())
 	{
 	  set_errno (EXDEV);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Opening the file must be part of the transaction.  It's not sufficient
@@ -2477,7 +2477,7 @@ rename (const char *oldpath, const char *newpath)
 	      goto retry;
 	    }
 	  __seterrno_from_nt_status (status);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Renaming a dir to another, existing dir fails always, even if
@@ -2491,7 +2491,7 @@ rename (const char *oldpath, const char *newpath)
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	}
       /* You can't copy a file if the destination exists and has the R/O
@@ -2509,7 +2509,7 @@ rename (const char *oldpath, const char *newpath)
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	  status = NtSetAttributesFile (nfh, dstpc->file_attributes ()
 					     & ~FILE_ATTRIBUTE_READONLY);
@@ -2517,7 +2517,7 @@ rename (const char *oldpath, const char *newpath)
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -2553,7 +2553,7 @@ rename (const char *oldpath, const char *newpath)
 	      debug_printf ("%s and %s are the same file", oldpath, newpath);
 	      NtClose (nfh);
 	      res = 0;
-	      __leave;
+	      __cygleave;
 	    }
 	  NtClose (nfh);
 	}
@@ -2565,7 +2565,7 @@ rename (const char *oldpath, const char *newpath)
 	{
 	  debug_printf ("target filename too long");
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       pfri = (PFILE_RENAME_INFORMATION) tp.w_get ();
       pfri->ReplaceIfExists = TRUE;
@@ -2618,7 +2618,7 @@ rename (const char *oldpath, const char *newpath)
 		      goto retry_reopen;
 		    }
 		  __seterrno_from_nt_status (status);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  if (NT_SUCCESS (status = unlink_nt (*dstpc)))
@@ -2635,11 +2635,11 @@ rename (const char *oldpath, const char *newpath)
       else
 	__seterrno_from_nt_status (status);
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   if (fh)
     NtClose (fh);
   /* Stop transaction if we started one. */
@@ -2661,7 +2661,7 @@ system (const char *cmdstring)
   int res = -1;
   const char* command[4];
 
-  __try
+  __cygtry
     {
       command[0] = "sh";
       command[1] = "-c";
@@ -2675,8 +2675,8 @@ system (const char *cmdstring)
 	  res = 127;
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -2724,7 +2724,7 @@ pathconf (const char *file, int v)
   fhandler_base *fh = NULL;
   long ret = -1;
 
-  __try
+  __cygtry
     {
       if (!*file)
 	{
@@ -2738,8 +2738,8 @@ pathconf (const char *file, int v)
       else
 	ret = fh->fpathconf (v);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   delete fh;
   return ret;
 }
@@ -2749,7 +2749,7 @@ ttyname_r (int fd, char *buf, size_t buflen)
 {
   int ret = 0;
 
-  __try
+  __cygtry
     {
       cygheap_fdget cfd (fd, true);
       if (cfd < 0)
@@ -2762,11 +2762,11 @@ ttyname_r (int fd, char *buf, size_t buflen)
 	strcpy (buf, cfd->ttyname ());
       debug_printf ("returning %d tty: %s", ret, ret ? "NULL" : buf);
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       ret = EFAULT;
     }
-  __endtry
+  __cygendtry
   return ret;
 }
 
@@ -3023,15 +3023,15 @@ _get_osfhandle (int fd)
 extern "C" int
 fstatvfs (int fd, struct statvfs *sfs)
 {
-  __try
+  __cygtry
     {
       cygheap_fdget cfd (fd);
       if (cfd < 0)
-	__leave;
+	__cygleave;
       return cfd->fstatvfs (sfs);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -3041,10 +3041,10 @@ statvfs (const char *name, struct statvfs *sfs)
   int res = -1;
   fhandler_base *fh = NULL;
 
-  __try
+  __cygtry
     {
       if (!(fh = build_fh_name (name, PC_SYM_FOLLOW, stat_suffixes)))
-	__leave;
+	__cygleave;
 
       if (fh->error ())
 	{
@@ -3060,8 +3060,8 @@ statvfs (const char *name, struct statvfs *sfs)
 	set_errno (ENOENT);
 
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   delete fh;
   MALLOC_CHECK;
   if (get_errno () != EFAULT)
@@ -3206,22 +3206,22 @@ mknod_worker (const char *path, mode_t type, mode_t mode, _major_t major,
 extern "C" int
 mknod32 (const char *path, mode_t mode, dev_t dev)
 {
-  __try
+  __cygtry
     {
       if (!*path)
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
 
       if (strlen (path) >= PATH_MAX)
-	__leave;
+	__cygleave;
 
       path_conv w32path (path, PC_SYM_NOFOLLOW);
       if (w32path.exists ())
 	{
 	  set_errno (EEXIST);
-	  __leave;
+	  __cygleave;
 	}
 
       mode_t type = mode & S_IFMT;
@@ -3243,20 +3243,20 @@ mknod32 (const char *path, mode_t mode, dev_t dev)
 	  {
 	    int fd = open (path, O_CREAT, mode);
 	    if (fd < 0)
-	      __leave;
+	      __cygleave;
 	    close (fd);
 	    return 0;
 	  }
 
 	default:
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       return mknod_worker (w32path.get_win32 (), type, mode, major, minor);
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   return -1;
 }
 
@@ -3958,7 +3958,7 @@ endutent ()
 extern "C" int
 utmpname (const char *file)
 {
-  __try
+  __cygtry
     {
       if (*file)
 	{
@@ -3971,8 +3971,8 @@ utmpname (const char *file)
 	    }
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   debug_printf ("Setting UTMP file failed");
   return -1;
 }
@@ -4019,13 +4019,13 @@ getutent ()
 extern "C" struct utmp *
 getutid (const struct utmp *id)
 {
-  __try
+  __cygtry
     {
       if (utmp_fd < 0)
 	{
 	  internal_setutent (false);
 	  if (utmp_fd < 0)
-	    __leave;
+	    __cygleave;
 	}
       utmp *ut = utmp_data;
       while (read (utmp_fd, ut, sizeof *ut) == sizeof *ut)
@@ -4051,21 +4051,21 @@ getutid (const struct utmp *id)
 	    }
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
 extern "C" struct utmp *
 getutline (const struct utmp *line)
 {
-  __try
+  __cygtry
     {
       if (utmp_fd < 0)
 	{
 	  internal_setutent (false);
 	  if (utmp_fd < 0)
-	    __leave;
+	    __cygleave;
 	}
 
       utmp *ut = utmp_data;
@@ -4075,21 +4075,21 @@ getutline (const struct utmp *line)
 	    !strncmp (ut->ut_line, line->ut_line, sizeof (ut->ut_line)))
 	  return ut;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
 extern "C" struct utmp *
 pututline (const struct utmp *ut)
 {
-  __try
+  __cygtry
     {
       internal_setutent (true);
       if (utmp_fd < 0)
 	{
 	  debug_printf ("error: utmp_fd %d", utmp_fd);
-	  __leave;
+	  __cygleave;
 	}
       debug_printf ("ut->ut_type %d, ut->ut_pid %d, ut->ut_line '%s', ut->ut_id '%s'\n",
 		    ut->ut_type, ut->ut_pid, ut->ut_line, ut->ut_id);
@@ -4109,8 +4109,8 @@ pututline (const struct utmp *ut)
 	 documentation seems pretty clear on this.  */
       return (struct utmp *) ut;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
@@ -4140,13 +4140,13 @@ getutxid (const struct utmpx *id)
   /* POSIX: Not required to be thread safe. */
   static struct utmpx utx;
 
-  __try
+  __cygtry
     {
       ((struct utmpx *)id)->ut_time = id->ut_tv.tv_sec;
       return copy_ut_to_utx (getutid ((struct utmp *) id), &utx);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
@@ -4156,13 +4156,13 @@ getutxline (const struct utmpx *line)
   /* POSIX: Not required to be thread safe. */
   static struct utmpx utx;
 
-  __try
+  __cygtry
     {
       ((struct utmpx *)line)->ut_time = line->ut_tv.tv_sec;
       return copy_ut_to_utx (getutline ((struct utmp *) line), &utx);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
@@ -4172,13 +4172,13 @@ pututxline (const struct utmpx *utmpx)
   /* POSIX: Not required to be thread safe. */
   static struct utmpx utx;
 
-  __try
+  __cygtry
     {
       ((struct utmpx *)utmpx)->ut_time = utmpx->ut_tv.tv_sec;
       return copy_ut_to_utx (pututline ((struct utmp *) utmpx), &utx);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
@@ -4543,11 +4543,11 @@ extern "C" int
 openat (int dirfd, const char *pathname, int flags, ...)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
 
       va_list ap;
       mode_t mode;
@@ -4557,8 +4557,8 @@ openat (int dirfd, const char *pathname, int flags, ...)
       va_end (ap);
       return open (path, flags, mode);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4568,7 +4568,7 @@ faccessat (int dirfd, const char *pathname, int mode, int flags)
   tmp_pathbuf tp;
   int res = -1;
 
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (!gen_full_path_at (path, dirfd, pathname))
@@ -4592,8 +4592,8 @@ faccessat (int dirfd, const char *pathname, int mode, int flags)
 	    }
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   debug_printf ("returning %d", res);
   return res;
 }
@@ -4602,7 +4602,7 @@ extern "C" int
 fchmodat (int dirfd, const char *pathname, mode_t mode, int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       if (flags)
 	{
@@ -4610,15 +4610,15 @@ fchmodat (int dirfd, const char *pathname, mode_t mode, int flags)
 	     AT_SYMLINK_NOFOLLOW is allowed to fail on symlinks; but Linux
 	     blindly fails even for non-symlinks.  */
 	  set_errno ((flags & ~AT_SYMLINK_NOFOLLOW) ? EINVAL : EOPNOTSUPP);
-	  __leave;
+	  __cygleave;
 	}
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return chmod (path, mode);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4626,21 +4626,21 @@ extern "C" int
 fchownat (int dirfd, const char *pathname, uid_t uid, gid_t gid, int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       if (flags & ~AT_SYMLINK_NOFOLLOW)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return chown_worker (path, (flags & AT_SYMLINK_NOFOLLOW)
 				 ? PC_SYM_NOFOLLOW : PC_SYM_FOLLOW, uid, gid);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4649,23 +4649,23 @@ fstatat (int dirfd, const char *__restrict pathname, struct stat *__restrict st,
 	 int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       if (flags & ~AT_SYMLINK_NOFOLLOW)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       path_conv pc (path, ((flags & AT_SYMLINK_NOFOLLOW)
 			   ? PC_SYM_NOFOLLOW : PC_SYM_FOLLOW)
 			  | PC_POSIX | PC_KEEP_HANDLE, stat_suffixes);
       return stat_worker (pc, st);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4676,23 +4676,23 @@ utimensat (int dirfd, const char *pathname, const struct timespec *times,
 	   int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (flags & ~AT_SYMLINK_NOFOLLOW)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       path_conv win32 (path, PC_POSIX | ((flags & AT_SYMLINK_NOFOLLOW)
 					 ? PC_SYM_NOFOLLOW : PC_SYM_FOLLOW),
 		       stat_suffixes);
       return utimens_worker (win32, times);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4700,15 +4700,15 @@ extern "C" int
 futimesat (int dirfd, const char *pathname, const struct timeval *times)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname, true))
-	__leave;
+	__cygleave;
       return utimes (path, times);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4718,33 +4718,33 @@ linkat (int olddirfd, const char *oldpathname,
 	int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       if (flags & ~AT_SYMLINK_FOLLOW)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       char *oldpath = tp.c_get ();
       if (gen_full_path_at (oldpath, olddirfd, oldpathname))
-	__leave;
+	__cygleave;
       char *newpath = tp.c_get ();
       if (gen_full_path_at (newpath, newdirfd, newpathname))
-	__leave;
+	__cygleave;
       if (flags & AT_SYMLINK_FOLLOW)
 	{
 	  path_conv old_name (oldpath, PC_SYM_FOLLOW | PC_POSIX, stat_suffixes);
 	  if (old_name.error)
 	    {
 	      set_errno (old_name.error);
-	      __leave;
+	      __cygleave;
 	    }
 	  strcpy (oldpath, old_name.get_posix ());
 	}
       return link (oldpath, newpath);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4752,15 +4752,15 @@ extern "C" int
 mkdirat (int dirfd, const char *pathname, mode_t mode)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return mkdir (path, mode);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4768,15 +4768,15 @@ extern "C" int
 mkfifoat (int dirfd, const char *pathname, mode_t mode)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return mkfifo (path, mode);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4784,15 +4784,15 @@ extern "C" int
 mknodat (int dirfd, const char *pathname, mode_t mode, dev_t dev)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return mknod32 (path, mode, dev);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4801,15 +4801,15 @@ readlinkat (int dirfd, const char *__restrict pathname, char *__restrict buf,
 	    size_t bufsize)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return readlink (path, buf, bufsize);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4818,18 +4818,18 @@ renameat (int olddirfd, const char *oldpathname,
 	  int newdirfd, const char *newpathname)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *oldpath = tp.c_get ();
       if (gen_full_path_at (oldpath, olddirfd, oldpathname))
-	__leave;
+	__cygleave;
       char *newpath = tp.c_get ();
       if (gen_full_path_at (newpath, newdirfd, newpathname))
-	__leave;
+	__cygleave;
       return rename (oldpath, newpath);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4839,15 +4839,15 @@ scandirat (int dirfd, const char *pathname, struct dirent ***namelist,
 	   int (*compar) (const struct dirent **, const struct dirent **))
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return scandir (pathname, namelist, select, compar);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4855,15 +4855,15 @@ extern "C" int
 symlinkat (const char *oldpath, int newdirfd, const char *newpathname)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       char *newpath = tp.c_get ();
       if (gen_full_path_at (newpath, newdirfd, newpathname))
-	__leave;
+	__cygleave;
       return symlink (oldpath, newpath);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -4871,19 +4871,19 @@ extern "C" int
 unlinkat (int dirfd, const char *pathname, int flags)
 {
   tmp_pathbuf tp;
-  __try
+  __cygtry
     {
       if (flags & ~AT_REMOVEDIR)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       char *path = tp.c_get ();
       if (gen_full_path_at (path, dirfd, pathname))
-	__leave;
+	__cygleave;
       return (flags & AT_REMOVEDIR) ? rmdir (path) : unlink (path);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }

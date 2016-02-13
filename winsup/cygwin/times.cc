@@ -81,7 +81,7 @@ times (struct tms *buf)
   LARGE_INTEGER ticks;
   clock_t tc = (clock_t) -1;
 
-  __try
+  __cygtry
     {
       /* Fetch boot time if we haven't already. */
       if (!stodi.BootTime.QuadPart)
@@ -104,11 +104,11 @@ times (struct tms *buf)
       timeval_to_filetime (&myself->rusage_children.ru_utime, &kut.UserTime);
       buf->tms_cutime = __to_clock_t (&kut.UserTime, 1);
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       tc = (clock_t) -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%D = times(%p)", tc, buf);
   return tc;
 }
@@ -123,7 +123,7 @@ settimeofday (const struct timeval *tv, const struct timezone *tz)
   struct tm *ptm;
   int res = -1;
 
-  __try
+  __cygtry
     {
       if (tv->tv_usec < 0 || tv->tv_usec >= 1000000)
 	{
@@ -147,11 +147,11 @@ settimeofday (const struct timeval *tv, const struct timezone *tz)
       if (res)
 	set_errno (EPERM);
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%R = settimeofday(%p, %p)", res, tv, tz);
   return res;
 }

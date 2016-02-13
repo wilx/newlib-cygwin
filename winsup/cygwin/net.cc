@@ -505,12 +505,12 @@ dup_ent (servent *src)
 extern "C" struct protoent *
 cygwin_getprotobyname (const char *p)
 {
-  __try
+  __cygtry
     {
       return dup_ent (getprotobyname (p));
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 
@@ -750,14 +750,14 @@ cygwin_sendto (int fd, const void *buf, size_t len, int flags,
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->sendto (buf, len, flags, to, tolen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = sendto(%d, %p, %ld, %y, %p, %d)",
 		  res, fd, buf, len, flags, to, tolen);
   return res;
@@ -772,7 +772,7 @@ cygwin_recvfrom (int fd, void *buf, size_t len, int flags,
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
@@ -782,8 +782,8 @@ cygwin_recvfrom (int fd, void *buf, size_t len, int flags,
 	   to deliver valid error conditions and peer address. */
 	res = fh->recvfrom (buf, len, flags, from, fromlen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = recvfrom(%d, %p, %ld, %y, %p, %p)",
 		  res, fd, buf, len, flags, from, fromlen);
   return res;
@@ -817,11 +817,11 @@ cygwin_setsockopt (int fd, int level, int optname, const void *optval,
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (!fh)
-	__leave;
+	__cygleave;
 
       /* Switch off the AF_LOCAL handshake and thus SO_PEERCRED handling
 	 for AF_LOCAL/SOCK_STREAM sockets.  This allows to handle special
@@ -836,7 +836,7 @@ cygwin_setsockopt (int fd, int level, int optname, const void *optval,
 	    set_errno (EINVAL);
 	  else
 	    res = fh->af_local_set_no_getpeereid ();
-	  __leave;
+	  __cygleave;
 	}
 
       /* Old applications still use the old WinSock1 IPPROTO_IP values. */
@@ -923,11 +923,11 @@ cygwin_setsockopt (int fd, int level, int optname, const void *optval,
 	    break;
 	  }
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%R = setsockopt(%d, %d, %y, %p, %d)",
 		  res, fd, level, optname, optval, optlen);
   return res;
@@ -940,16 +940,16 @@ cygwin_getsockopt (int fd, int level, int optname, void *optval,
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (!fh)
-	__leave;
+	__cygleave;
       if (optname == SO_PEERCRED && level == SOL_SOCKET)
 	{
 	  struct ucred *cred = (struct ucred *) optval;
 	  res = fh->getpeereid (&cred->pid, &cred->uid, &cred->gid);
-	  __leave;
+	  __cygleave;
 	}
       /* Old applications still use the old WinSock1 IPPROTO_IP values. */
       if (level == IPPROTO_IP && CYGWIN_VERSION_CHECK_FOR_USING_WINSOCK1_VALUES)
@@ -982,11 +982,11 @@ cygwin_getsockopt (int fd, int level, int optname, void *optval,
 	    }
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%R = getsockopt(%d, %d, %y, %p, %p)",
 		  res, fd, level, optname, optval, optlen);
   return res;
@@ -1022,14 +1022,14 @@ cygwin_connect (int fd, const struct sockaddr *name, socklen_t namelen)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->connect (name, namelen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = connect(%d, %p, %d)", res, fd, name, namelen);
   return res;
 }
@@ -1040,12 +1040,12 @@ cygwin_getservbyname (const char *name, const char *proto)
 {
   servent *res = NULL;
 
-  __try
+  __cygtry
     {
       res = dup_ent (getservbyname (name, proto));
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%p = getservbyname (%s, %s)", res, name, proto);
   return res;
 }
@@ -1056,12 +1056,12 @@ cygwin_getservbyport (int port, const char *proto)
 {
   servent *res = NULL;
 
-  __try
+  __cygtry
     {
       res = dup_ent (getservbyport (port, proto));
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%p = getservbyport (%d, %s)", res, port, proto);
   return res;
 }
@@ -1071,7 +1071,7 @@ cygwin_gethostname (char *name, size_t len)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       if (gethostname (name, len))
 	{
@@ -1084,14 +1084,14 @@ cygwin_gethostname (char *name, size_t len)
 		set_errno (ENAMETOOLONG);
 	      else
 		set_winsock_errno ();
-	      __leave;
+	      __cygleave;
 	    }
 	}
       debug_printf ("name %s", name);
       res = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -1121,7 +1121,7 @@ cygwin_gethostbyname (const char *name)
   char dummy;
   hostent *res = NULL;
 
-  __try
+  __cygtry
     {
       if (sscanf (name, "%u.%u.%u.%u%c", &a, &b, &c, &d, &dummy) != 4
 	  || a >= 256 || b >= 256 || c >= 256 || d >= 256)
@@ -1152,11 +1152,11 @@ cygwin_gethostbyname (const char *name)
 	  set_host_errno ();
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = NULL;
     }
-  __endtry
+  __cygendtry
   return res;
 }
 
@@ -1166,7 +1166,7 @@ cygwin_gethostbyaddr (const char *addr, int len, int type)
 {
   hostent *res = NULL;
 
-  __try
+  __cygtry
     {
       res = dup_ent (gethostbyaddr (addr, len, type));
       if (res)
@@ -1174,11 +1174,11 @@ cygwin_gethostbyaddr (const char *addr, int len, int type)
       else
 	set_host_errno ();
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = NULL;
     }
-  __endtry
+  __cygendtry
   return res;
 }
 
@@ -1504,7 +1504,7 @@ gethostbyname2 (const char *name, int af)
 {
   hostent *res = NULL;
 
-  __try
+  __cygtry
     {
       if (!(_res.options & RES_INIT))
 	res_init();
@@ -1526,7 +1526,7 @@ gethostbyname2 (const char *name, int af)
 	default:
 	  set_errno (EAFNOSUPPORT);
 	  h_errno = NETDB_INTERNAL;
-	  __leave;
+	  __cygleave;
 	}
 
       h_errno = NETDB_SUCCESS;
@@ -1534,8 +1534,8 @@ gethostbyname2 (const char *name, int af)
       if ((res == NULL) && (h_errno == NETDB_SUCCESS))
 	  res = gethostby_helper (name, af, type, addrsize_in, addrsize_out);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -1547,15 +1547,15 @@ cygwin_accept (int fd, struct sockaddr *peer, socklen_t *len)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->accept4 (peer, len,
 			   fh->is_nonblocking () ? SOCK_NONBLOCK : 0);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = accept(%d, %p, %p)", res, fd, peer, len);
   return res;
 }
@@ -1567,18 +1567,18 @@ accept4 (int fd, struct sockaddr *peer, socklen_t *len, int flags)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (!fh)
-	__leave;
+	__cygleave;
       if ((flags & ~(SOCK_NONBLOCK | SOCK_CLOEXEC)) != 0)
 	  set_errno (EINVAL);
       else
 	res = fh->accept4 (peer, len, flags);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = accept4(%d, %p, %p, %y)", res, fd, peer, len, flags);
   return res;
 }
@@ -1589,14 +1589,14 @@ cygwin_bind (int fd, const struct sockaddr *my_addr, socklen_t addrlen)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->bind (my_addr, addrlen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = bind(%d, %p, %d)", res, fd, my_addr, addrlen);
   return res;
 }
@@ -1607,14 +1607,14 @@ cygwin_getsockname (int fd, struct sockaddr *addr, socklen_t *namelen)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->getsockname (addr, namelen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R =getsockname (%d, %p, %p)", res, fd, addr, namelen);
   return res;
 }
@@ -1625,14 +1625,14 @@ cygwin_listen (int fd, int backlog)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->listen (backlog);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = listen(%d, %d)", res, fd, backlog);
   return res;
 }
@@ -1667,7 +1667,7 @@ cygwin_hstrerror (int err)
 extern "C" void
 cygwin_herror (const char *s)
 {
-  __try
+  __cygtry
     {
       if (cygheap->fdtab.not_open (2))
 	return;
@@ -1696,8 +1696,8 @@ cygwin_herror (const char *s)
       write (2, h_errstr, strlen (h_errstr));
       write (2, "\n", 1);
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
 }
 
 /* exported as getpeername: standards? */
@@ -1707,14 +1707,14 @@ cygwin_getpeername (int fd, struct sockaddr *name, socklen_t *len)
   int res = -1;
   fhandler_socket *fh = NULL;
 
-  __try
+  __cygtry
     {
       fh = get (fd);
       if (fh)
 	res = fh->getpeername (name, len);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = getpeername(%d) %p", res, fd,
   		  (fh ? fh->get_socket () : (SOCKET) -1));
   return res;
@@ -1728,7 +1728,7 @@ cygwin_recv (int fd, void *buf, size_t len, int flags)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
@@ -1738,8 +1738,8 @@ cygwin_recv (int fd, void *buf, size_t len, int flags)
 	   to deliver valid error conditions. */
 	res = fh->recvfrom (buf, len, flags, NULL, NULL);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%lR = recv(%d, %p, %ld, %y)", res, fd, buf, len, flags);
   return res;
 }
@@ -1752,14 +1752,14 @@ cygwin_send (int fd, const void *buf, size_t len, int flags)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
 	res = fh->sendto (buf, len, flags, NULL, 0);
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   syscall_printf ("%lR = send(%d, %p, %ld, %y)", res, fd, buf, len, flags);
   return res;
 }
@@ -1768,7 +1768,7 @@ cygwin_send (int fd, const void *buf, size_t len, int flags)
 extern "C" int
 getdomainname (char *domain, size_t len)
 {
-  __try
+  __cygtry
     {
       PFIXED_INFO info = NULL;
       ULONG size = 0;
@@ -1782,8 +1782,8 @@ getdomainname (char *domain, size_t len)
 	}
       __seterrno ();
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   return -1;
 }
 
@@ -2378,19 +2378,19 @@ freeifaddrs (struct ifaddrs *ifp)
 int
 get_ifconf (struct ifconf *ifc, int what)
 {
-  __try
+  __cygtry
     {
       /* Ensure we have space for at least one struct ifreqs, fail if not. */
       if (ifc->ifc_len < (int) sizeof (struct ifreq))
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       struct ifall *ifret, *ifp;
       ifret = get_ifs (AF_INET);
       if (!ifret)
-	__leave;
+	__cygleave;
 
       struct sockaddr_in *sin;
       struct ifreq *ifr = ifc->ifc_req;
@@ -2457,8 +2457,8 @@ get_ifconf (struct ifconf *ifc, int what)
       free (ifret);
       return 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -2468,7 +2468,7 @@ if_nametoindex (const char *name)
   PIP_ADAPTER_ADDRESSES pa0 = NULL, pap;
   unsigned index = 0;
 
-  __try
+  __cygtry
     {
       if (get_adapters_addresses (&pa0, AF_UNSPEC))
 	{
@@ -2487,11 +2487,11 @@ if_nametoindex (const char *name)
 	  free (pa0);
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       index = 0;
     }
-  __endtry
+  __cygendtry
   return index;
 }
 
@@ -2501,7 +2501,7 @@ if_indextoname (unsigned ifindex, char *ifname)
   PIP_ADAPTER_ADDRESSES pa0 = NULL, pap;
   char *name = NULL;
 
-  __try
+  __cygtry
     {
       if (get_adapters_addresses (&pa0, AF_UNSPEC))
 	{
@@ -2531,8 +2531,8 @@ if_indextoname (unsigned ifindex, char *ifname)
       else
 	set_errno (ENXIO);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return name;
 }
 
@@ -2543,7 +2543,7 @@ if_nameindex (void)
   struct if_nameindex *iflist = NULL;
   char (*ifnamelist)[IF_NAMESIZE];
 
-  __try
+  __cygtry
     {
       if (get_adapters_addresses (&pa0, AF_UNSPEC))
 	{
@@ -2589,8 +2589,8 @@ if_nameindex (void)
       else
 	set_errno (ENXIO);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return iflist;
 }
 
@@ -2614,11 +2614,11 @@ cygwin_bindresvport_sa (int fd, struct sockaddr *sa)
   socklen_t salen;
   int ret = -1;
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (!fh)
-	__leave;
+	__cygleave;
 
       if (!sa)
 	{
@@ -2641,7 +2641,7 @@ cygwin_bindresvport_sa (int fd, struct sockaddr *sa)
 	  break;
 	default:
 	  set_errno (EPFNOSUPPORT);
-	  __leave;
+	  __cygleave;
 	}
 
       /* If a non-zero port number is given, try this first.  If that succeeds,
@@ -2650,7 +2650,7 @@ cygwin_bindresvport_sa (int fd, struct sockaddr *sa)
 	{
 	  ret = fh->bind (sa, salen);
 	  if (!ret || (get_errno () != EADDRINUSE && get_errno () != EINVAL))
-	    __leave;
+	    __cygleave;
 	}
 
       LONG myport;
@@ -2675,8 +2675,8 @@ cygwin_bindresvport_sa (int fd, struct sockaddr *sa)
 	}
 
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -2699,7 +2699,7 @@ socketpair (int family, int type, int protocol, int *sb)
   struct sockaddr_in sock_in, sock_out;
   int len;
 
-  __try
+  __cygtry
     {
       int flags = type & _SOCK_FLAG_MASK;
       type &= ~_SOCK_FLAG_MASK;
@@ -2707,23 +2707,23 @@ socketpair (int family, int type, int protocol, int *sb)
       if (family != AF_LOCAL && family != AF_INET)
 	{
 	  set_errno (EAFNOSUPPORT);
-	  __leave;
+	  __cygleave;
 	}
       if (type != SOCK_STREAM && type != SOCK_DGRAM)
 	{
 	  set_errno (EPROTOTYPE);
-	  __leave;
+	  __cygleave;
 	}
       if ((flags & ~(SOCK_NONBLOCK | SOCK_CLOEXEC)) != 0)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       if ((family == AF_LOCAL && protocol != PF_UNSPEC && protocol != PF_LOCAL)
 	  || (family == AF_INET && protocol != PF_UNSPEC && protocol != PF_INET))
 	{
 	  set_errno (EPROTONOSUPPORT);
-	  __leave;
+	  __cygleave;
 	}
 
       /* create the first socket */
@@ -2732,7 +2732,7 @@ socketpair (int family, int type, int protocol, int *sb)
 	{
 	  debug_printf ("first socket call failed");
 	  set_winsock_errno ();
-	  __leave;
+	  __cygleave;
 	}
 
       /* bind the socket to any unused port */
@@ -2743,14 +2743,14 @@ socketpair (int family, int type, int protocol, int *sb)
 	{
 	  debug_printf ("bind failed");
 	  set_winsock_errno ();
-	  __leave;
+	  __cygleave;
 	}
       len = sizeof (sock_in);
       if (getsockname (newsock, (struct sockaddr *) &sock_in, &len) < 0)
 	{
 	  debug_printf ("getsockname error");
 	  set_winsock_errno ();
-	  __leave;
+	  __cygleave;
 	}
 
       /* For stream sockets, create a listener */
@@ -2763,7 +2763,7 @@ socketpair (int family, int type, int protocol, int *sb)
 	{
 	  debug_printf ("second socket call failed");
 	  set_winsock_errno ();
-	  __leave;
+	  __cygleave;
 	}
 
       /* For datagram sockets, bind the 2nd socket to an unused address, too */
@@ -2776,14 +2776,14 @@ socketpair (int family, int type, int protocol, int *sb)
 	    {
 	      debug_printf ("bind failed");
 	      set_winsock_errno ();
-	      __leave;
+	      __cygleave;
 	    }
 	  len = sizeof (sock_out);
 	  if (getsockname (outsock, (struct sockaddr *) &sock_out, &len) < 0)
 	    {
 	      debug_printf ("getsockname error");
 	      set_winsock_errno ();
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -2797,7 +2797,7 @@ socketpair (int family, int type, int protocol, int *sb)
 	{
 	  debug_printf ("connect error");
 	  set_winsock_errno ();
-	  __leave;
+	  __cygleave;
 	}
 
       if (type == SOCK_STREAM)
@@ -2809,7 +2809,7 @@ socketpair (int family, int type, int protocol, int *sb)
 	    {
 	      debug_printf ("accept error");
 	      set_winsock_errno ();
-	      __leave;
+	      __cygleave;
 	    }
 	  closesocket (newsock);
 	  newsock = INVALID_SOCKET;
@@ -2822,7 +2822,7 @@ socketpair (int family, int type, int protocol, int *sb)
 	    {
 	      debug_printf ("connect error");
 	      set_winsock_errno ();
-	      __leave;
+	      __cygleave;
 	    }
 	  insock = newsock;
 	  newsock = INVALID_SOCKET;
@@ -2870,8 +2870,8 @@ socketpair (int family, int type, int protocol, int *sb)
 	    sb0.release ();
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%R = socketpair(...)", res);
   if (res == -1)
     {
@@ -2905,7 +2905,7 @@ cygwin_recvmsg (int fd, struct msghdr *msg, int flags)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
@@ -2919,11 +2919,11 @@ cygwin_recvmsg (int fd, struct msghdr *msg, int flags)
 	    res = fh->recvmsg (msg, flags);
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%lR = recvmsg(%d, %p, %y)", res, fd, msg, flags);
   return res;
 }
@@ -2936,7 +2936,7 @@ cygwin_sendmsg (int fd, const struct msghdr *msg, int flags)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       fhandler_socket *fh = get (fd);
       if (fh)
@@ -2946,11 +2946,11 @@ cygwin_sendmsg (int fd, const struct msghdr *msg, int flags)
 	    res = fh->sendmsg (msg, flags);
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   syscall_printf ("%lR = sendmsg(%d, %p, %y)", res, fd, msg, flags);
   return res;
 }
@@ -3512,7 +3512,7 @@ cygwin_getaddrinfo (const char *hostname, const char *servname,
 #ifndef AI_DISABLE_IDN_ENCODING
 #define AI_DISABLE_IDN_ENCODING 0x80000
 #endif
-  __try
+  __cygtry
     {
       if (hints && (hints->ai_flags
 		    & ~(AI_PASSIVE | AI_CANONNAME | AI_NUMERICHOST | AI_ALL
@@ -3601,7 +3601,7 @@ cygwin_getaddrinfo (const char *hostname, const char *servname,
 	  *res = ga_duplist (wres, false, idn_flags, ret);
 	  FreeAddrInfoW (wres);
 	  if (!*res)
-	    __leave;
+	    __cygleave;
 	}
       /* AI_V4MAPPED and AI_ALL are not supported prior to Vista.  So, what
 	 we do here is to emulate AI_V4MAPPED.  If no IPv6 addresses are
@@ -3632,7 +3632,7 @@ cygwin_getaddrinfo (const char *hostname, const char *servname,
 		{
 		  if (!ret)
 		    cygwin_freeaddrinfo (*res);
-		  __leave;
+		  __cygleave;
 		}
 	      /* If a list of v6 addresses exists, append the v4-in-v6 address
 		 list.  Otherwise just return the v4-in-v6 address list. */
@@ -3649,11 +3649,11 @@ cygwin_getaddrinfo (const char *hostname, const char *servname,
 	    }
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       ret = EAI_SYSTEM;
     }
-  __endtry
+  __cygendtry
   return ret;
 }
 
@@ -3664,7 +3664,7 @@ cygwin_getnameinfo (const struct sockaddr *sa, socklen_t salen,
 {
   int ret = 0;
 
-  __try
+  __cygtry
     {
       /* When the incoming port number does not resolve to a well-known service,
 	 WinSock's getnameinfo up to Windows 2003 returns with error WSANO_DATA
@@ -3749,11 +3749,11 @@ cygwin_getnameinfo (const struct sockaddr *sa, socklen_t salen,
       else if (ret == EAI_SYSTEM)
 	set_winsock_errno ();
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       ret = EAI_SYSTEM;
     }
-  __endtry
+  __cygendtry
   return ret;
 }
 

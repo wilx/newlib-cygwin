@@ -665,7 +665,7 @@ _addenv (const char *name, const char *value, int overwrite)
 extern "C" int
 putenv (char *str)
 {
-  __try
+  __cygtry
     {
       if (*str)
 	{
@@ -678,8 +678,8 @@ putenv (char *str)
 	}
       return 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -688,17 +688,17 @@ putenv (char *str)
 extern "C" int
 setenv (const char *name, const char *value, int overwrite)
 {
-  __try
+  __cygtry
     {
       if (!name || !*name || strchr (name, '='))
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       return _addenv (name, value, !!overwrite);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -709,12 +709,12 @@ unsetenv (const char *name)
   register char **e;
   int offset;
 
-  __try
+  __cygtry
     {
       if (!name || *name == '\0' || strchr (name, '='))
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       while (my_findenv (name, &offset))	/* if set multiple times */
@@ -725,8 +725,8 @@ unsetenv (const char *name)
 
       return 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -789,7 +789,7 @@ environ_init (char **envp, int envc)
   static char NO_COPY cygterm[] = "TERM=cygwin";
   tmp_pathbuf tp;
 
-  __try
+  __cygtry
     {
       char *tmpbuf = tp.t_get ();
       if (!envp)
@@ -867,12 +867,12 @@ environ_init (char **envp, int envc)
 	}
       MALLOC_CHECK;
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       api_fatal ("internal error reading the windows environment "
 		 "- too many environment variables?");
     }
-  __endtry
+  __cygendtry
 }
 
 /* Function called by qsort to sort environment strings.  */

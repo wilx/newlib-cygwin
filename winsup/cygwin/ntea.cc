@@ -60,7 +60,7 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
      EA in the file is returned twice. */
   char lastname[MAX_EA_NAME_LEN];
 
-  __try
+  __cygtry
     {
       pc.get_object_attr (attr, sec_none_nih);
 
@@ -78,7 +78,7 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -95,13 +95,13 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 	  else
 	    {
 	      set_errno (ENOTSUP);
-	      __leave;
+	      __cygleave;
 	    }
 
 	  if ((nlen = strlen (name)) >= MAX_EA_NAME_LEN)
 	    {
 	      set_errno (EINVAL);
-	      __leave;
+	      __cygleave;
 	    }
 	  glen = sizeof (FILE_GET_EA_INFORMATION) + nlen;
 	  gea = (PFILE_GET_EA_INFORMATION) alloca (glen);
@@ -158,7 +158,7 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 	      __seterrno_from_nt_status (status);
 	      break;
 	    }
-	  __leave;
+	  __cygleave;
 	}
       if (name)
 	{
@@ -170,14 +170,14 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 	  if (!fea->EaValueLength)
 	    {
 	      set_errno (ENOATTR);
-	      __leave;
+	      __cygleave;
 	    }
 	  if (size > 0)
 	    {
 	      if (size < fea->EaValueLength)
 		{
 		  set_errno (ERANGE);
-		  __leave;
+		  __cygleave;
 		}
 	      memcpy (value, fea->EaName + fea->EaNameLength + 1,
 		      fea->EaValueLength);
@@ -195,7 +195,7 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 		  if ((size_t) ret + fea->EaNameLength + 1 > size)
 		    {
 		      set_errno (ERANGE);
-		      __leave;
+		      __cygleave;
 		    }
 		  /* For compatibility with Linux, we always prepend "user." to
 		     the attribute name, so effectively we only support user
@@ -223,8 +223,8 @@ read_ea (HANDLE hdl, path_conv &pc, const char *name, char *value, size_t size)
 	  while (NT_SUCCESS (status) && strcmp (lastname, fea->EaName) != 0);
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   if (!hdl && h)
     NtClose (h);
   debug_printf ("%d = read_ea(%S, %s, %p, %lu)",
@@ -245,7 +245,7 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
   ULONG flen;
   size_t nlen;
 
-  __try
+  __cygtry
     {
       pc.get_object_attr (attr, sec_none_nih);
 
@@ -263,7 +263,7 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -272,7 +272,7 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
       if (!ascii_strncasematch (name, "user.", 5))
 	{
 	  set_errno (ENOTSUP);
-	  __leave;
+	  __cygleave;
 	}
 
       /* removexattr is supposed to fail with ENOATTR if the requested EA is
@@ -285,16 +285,16 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
 	  if (flags != XATTR_CREATE && flags != XATTR_REPLACE)
 	    {
 	      set_errno (EINVAL);
-	      __leave;
+	      __cygleave;
 	    }
 	  ssize_t rret = read_ea (hdl, pc, name, NULL, 0);
 	  if (flags == XATTR_CREATE && rret > 0)
 	    {
 	      set_errno (EEXIST);
-	      __leave;
+	      __cygleave;
 	    }
 	  if (flags == XATTR_REPLACE && rret < 0)
-	    __leave;
+	    __cygleave;
 	}
 
       /* Skip "user." prefix. */
@@ -303,7 +303,7 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
       if ((nlen = strlen (name)) >= MAX_EA_NAME_LEN)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       flen = sizeof (FILE_FULL_EA_INFORMATION) + nlen + 1 + size;
       fea = (PFILE_FULL_EA_INFORMATION) alloca (flen);
@@ -358,8 +358,8 @@ write_ea (HANDLE hdl, path_conv &pc, const char *name, const char *value,
       else
 	ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   if (!hdl && h)
     NtClose (h);
   debug_printf ("%d = write_ea(%S, %s, %p, %lu, %d)",

@@ -434,7 +434,7 @@ mq_open (const char *name, int oflag, ...)
   if (!check_path (mqname, mqueue, name, len))
     return (mqd_t) -1;
 
-  __try
+  __cygtry
     {
       oflag &= (O_CREAT | O_EXCL | O_NONBLOCK);
       nonblock = oflag & O_NONBLOCK;
@@ -469,28 +469,28 @@ mq_open (const char *name, int oflag, ...)
 		   || attr->mq_msgsize <= 0 || attr->mq_msgsize > 1048576)
 	    {
 	      set_errno (EINVAL);
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Calculate and set the file size */
 	  msgsize = MSGSIZE (attr->mq_msgsize);
 	  filesize = sizeof (struct mq_hdr)
 		     + (attr->mq_maxmsg * (sizeof (struct msg_hdr) + msgsize));
 	  if (lseek64 (fd, filesize - 1, SEEK_SET) == -1)
-	    __leave;
+	    __cygleave;
 	  if (write (fd, "", 1) == -1)
-	    __leave;
+	    __cygleave;
 
 	  /* Memory map the file */
 	  mptr = (int8_t *) mmap64 (NULL, (size_t) filesize,
 				    PROT_READ | PROT_WRITE,
 				    MAP_SHARED, fd, 0);
 	  if (mptr == (int8_t *) MAP_FAILED)
-	    __leave;
+	    __cygleave;
 
 	  /* Allocate one mq_info{} for the queue */
 	  if (!(mqinfo = (struct mq_info *)
 			 calloc (1, sizeof (struct mq_info))))
-	    __leave;
+	    __cygleave;
 	  mqinfo->mqi_hdr = mqhdr = (struct mq_hdr *) mptr;
 	  mqinfo->mqi_magic = MQI_MAGIC;
 	  mqinfo->mqi_flags = nonblock;
@@ -525,23 +525,23 @@ mq_open (const char *name, int oflag, ...)
 	  if (i != 0)
 	    {
 	      set_errno (i);
-	      __leave;
+	      __cygleave;
 	    }
 	  i = ipc_cond_init (&mqinfo->mqi_waitsend, mqhdr->mqh_uname, 'S');
 	  if (i != 0)
 	    {
 	      set_errno (i);
-	      __leave;
+	      __cygleave;
 	    }
 	  i = ipc_cond_init (&mqinfo->mqi_waitrecv, mqhdr->mqh_uname, 'R');
 	  if (i != 0)
 	    {
 	      set_errno (i);
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Initialization complete, turn off user-execute bit */
 	  if (fchmod (fd, mode) == -1)
-	    __leave;
+	    __cygleave;
 	  close (fd);
 	  return ((mqd_t) mqinfo);
 	}
@@ -552,7 +552,7 @@ mq_open (const char *name, int oflag, ...)
 	{
 	  if (errno == ENOENT && (oflag & O_CREAT))
 	    goto again;
-	  __leave;
+	  __cygleave;
 	}
       /* Make certain initialization is complete */
       for (i = 0; i < MAX_TRIES; i++)
@@ -565,7 +565,7 @@ mq_open (const char *name, int oflag, ...)
 		  fd = -1;
 		  goto again;
 		}
-	      __leave;
+	      __cygleave;
 	    }
 	  if ((statbuff.st_mode & S_IXUSR) == 0)
 	    break;
@@ -574,20 +574,20 @@ mq_open (const char *name, int oflag, ...)
       if (i == MAX_TRIES)
 	{
 	  set_errno (ETIMEDOUT);
-	  __leave;
+	  __cygleave;
 	}
 
       filesize = statbuff.st_size;
       mptr = (int8_t *) mmap64 (NULL, (size_t) filesize, PROT_READ | PROT_WRITE,
 				MAP_SHARED, fd, 0);
       if (mptr == (int8_t *) MAP_FAILED)
-	__leave;
+	__cygleave;
       close (fd);
       fd = -1;
 
       /* Allocate one mq_info{} for each open */
       if (!(mqinfo = (struct mq_info *) calloc (1, sizeof (struct mq_info))))
-	__leave;
+	__cygleave;
       mqinfo->mqi_hdr = mqhdr = (struct mq_hdr *) mptr;
       if (mqhdr->mqh_magic != MQI_MAGIC)
 	{
@@ -596,7 +596,7 @@ mq_open (const char *name, int oflag, ...)
     "This file is not usable as message queue anymore due to changes in the "
     "internal file layout.  Please remove the file and try again.", mqname);
 	  set_errno (EACCES);
-	  __leave;
+	  __cygleave;
 	}
       mqinfo->mqi_magic = MQI_MAGIC;
       mqinfo->mqi_flags = nonblock;
@@ -606,24 +606,24 @@ mq_open (const char *name, int oflag, ...)
       if (i != 0)
 	{
 	  set_errno (i);
-	  __leave;
+	  __cygleave;
 	}
       i = ipc_cond_init (&mqinfo->mqi_waitsend, mqhdr->mqh_uname, 'S');
       if (i != 0)
 	{
 	  set_errno (i);
-	  __leave;
+	  __cygleave;
 	}
       i = ipc_cond_init (&mqinfo->mqi_waitrecv, mqhdr->mqh_uname, 'R');
       if (i != 0)
 	{
 	  set_errno (i);
-	  __leave;
+	  __cygleave;
 	}
       return (mqd_t) mqinfo;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   /* Don't let following function calls change errno */
   save_errno save;
   if (created)
@@ -653,20 +653,20 @@ mq_getattr (mqd_t mqd, struct mq_attr *mqstat)
   struct mq_fattr *attr;
   struct mq_info *mqinfo;
 
-  __try
+  __cygtry
     {
       mqinfo = (struct mq_info *) mqd;
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       mqhdr = mqinfo->mqi_hdr;
       attr = &mqhdr->mqh_attr;
       if ((n = ipc_mutex_lock (mqinfo->mqi_lock, false)) != 0)
 	{
 	  errno = n;
-	  __leave;
+	  __cygleave;
 	}
       mqstat->mq_flags = mqinfo->mqi_flags;   /* per-open */
       mqstat->mq_maxmsg = attr->mq_maxmsg;    /* remaining three per-queue */
@@ -676,8 +676,8 @@ mq_getattr (mqd_t mqd, struct mq_attr *mqstat)
       ipc_mutex_unlock (mqinfo->mqi_lock);
       return 0;
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   return -1;
 }
 
@@ -689,20 +689,20 @@ mq_setattr (mqd_t mqd, const struct mq_attr *mqstat, struct mq_attr *omqstat)
   struct mq_fattr *attr;
   struct mq_info *mqinfo;
 
-  __try
+  __cygtry
     {
       mqinfo = (struct mq_info *) mqd;
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       mqhdr = mqinfo->mqi_hdr;
       attr = &mqhdr->mqh_attr;
       if ((n = ipc_mutex_lock (mqinfo->mqi_lock, false)) != 0)
 	{
 	  errno = n;
-	  __leave;
+	  __cygleave;
 	}
 
       if (omqstat != NULL)
@@ -721,8 +721,8 @@ mq_setattr (mqd_t mqd, const struct mq_attr *mqstat, struct mq_attr *omqstat)
       ipc_mutex_unlock (mqinfo->mqi_lock);
       return 0;
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   return -1;
 }
 
@@ -734,19 +734,19 @@ mq_notify (mqd_t mqd, const struct sigevent *notification)
   struct mq_hdr *mqhdr;
   struct mq_info *mqinfo;
 
-  __try
+  __cygtry
     {
       mqinfo = (struct mq_info *) mqd;
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       mqhdr = mqinfo->mqi_hdr;
       if ((n = ipc_mutex_lock (mqinfo->mqi_lock, false)) != 0)
 	{
 	  errno = n;
-	  __leave;
+	  __cygleave;
 	}
 
       pid = getpid ();
@@ -763,7 +763,7 @@ mq_notify (mqd_t mqd, const struct sigevent *notification)
 		{
 		  set_errno (EBUSY);
 		  ipc_mutex_unlock (mqinfo->mqi_lock);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  mqhdr->mqh_pid = pid;
@@ -772,8 +772,8 @@ mq_notify (mqd_t mqd, const struct sigevent *notification)
       ipc_mutex_unlock (mqinfo->mqi_lock);
       return 0;
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   return -1;
 }
 
@@ -794,18 +794,18 @@ _mq_send (mqd_t mqd, const char *ptr, size_t len, unsigned int prio,
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       mqinfo = (struct mq_info *) mqd;
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       if (prio > MQ_PRIO_MAX)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       mqhdr = mqinfo->mqi_hdr;        /* struct pointer */
@@ -814,13 +814,13 @@ _mq_send (mqd_t mqd, const char *ptr, size_t len, unsigned int prio,
       if ((n = ipc_mutex_lock (mqinfo->mqi_lock, true)) != 0)
 	{
 	  errno = n;
-	  __leave;
+	  __cygleave;
 	}
       ipc_mutex_locked = true;
       if (len > (size_t) attr->mq_msgsize)
 	{
 	  set_errno (EMSGSIZE);
-	  __leave;
+	  __cygleave;
 	}
       if (attr->mq_curmsgs == 0)
 	{
@@ -839,7 +839,7 @@ _mq_send (mqd_t mqd, const char *ptr, size_t len, unsigned int prio,
 	  if (mqinfo->mqi_flags & O_NONBLOCK)
 	    {
 	      set_errno (EAGAIN);
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Wait for room for one message on the queue */
 	  while (attr->mq_curmsgs >= attr->mq_maxmsg)
@@ -849,7 +849,7 @@ _mq_send (mqd_t mqd, const char *ptr, size_t len, unsigned int prio,
 	      if (ret != 0)
 		{
 		  set_errno (ret);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	}
@@ -893,8 +893,8 @@ _mq_send (mqd_t mqd, const char *ptr, size_t len, unsigned int prio,
       ipc_mutex_unlock (mqinfo->mqi_lock);
       ret = 0;
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   if (ipc_mutex_locked)
     ipc_mutex_unlock (mqinfo->mqi_lock);
   return ret;
@@ -929,12 +929,12 @@ _mq_receive (mqd_t mqd, char *ptr, size_t maxlen, unsigned int *priop,
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       mqhdr = mqinfo->mqi_hdr;        /* struct pointer */
       mptr = (int8_t *) mqhdr;        /* byte pointer */
@@ -942,20 +942,20 @@ _mq_receive (mqd_t mqd, char *ptr, size_t maxlen, unsigned int *priop,
       if ((n = ipc_mutex_lock (mqinfo->mqi_lock, true)) != 0)
 	{
 	  errno = n;
-	  __leave;
+	  __cygleave;
 	}
       ipc_mutex_locked = true;
       if (maxlen < (size_t) attr->mq_msgsize)
 	{
 	  set_errno (EMSGSIZE);
-	  __leave;
+	  __cygleave;
 	}
       if (attr->mq_curmsgs == 0)	/* queue is empty */
 	{
 	  if (mqinfo->mqi_flags & O_NONBLOCK)
 	    {
 	      set_errno (EAGAIN);
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Wait for a message to be placed onto queue */
 	  mqhdr->mqh_nwait++;
@@ -966,7 +966,7 @@ _mq_receive (mqd_t mqd, char *ptr, size_t maxlen, unsigned int *priop,
 	      if (ret != 0)
 		{
 		  set_errno (ret);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  mqhdr->mqh_nwait--;
@@ -993,8 +993,8 @@ _mq_receive (mqd_t mqd, char *ptr, size_t maxlen, unsigned int *priop,
 
       ipc_mutex_unlock (mqinfo->mqi_lock);
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   if (ipc_mutex_locked)
     ipc_mutex_unlock (mqinfo->mqi_lock);
   return len;
@@ -1021,25 +1021,25 @@ mq_close (mqd_t mqd)
   struct mq_fattr *attr;
   struct mq_info *mqinfo;
 
-  __try
+  __cygtry
     {
       mqinfo = (struct mq_info *) mqd;
       if (mqinfo->mqi_magic != MQI_MAGIC)
 	{
 	  set_errno (EBADF);
-	  __leave;
+	  __cygleave;
 	}
       mqhdr = mqinfo->mqi_hdr;
       attr = &mqhdr->mqh_attr;
 
       if (mq_notify (mqd, NULL))	/* unregister calling process */
-	__leave;
+	__cygleave;
 
       msgsize = MSGSIZE (attr->mq_msgsize);
       filesize = sizeof (struct mq_hdr)
 		 + (attr->mq_maxmsg * (sizeof (struct msg_hdr) + msgsize));
       if (munmap (mqinfo->mqi_hdr, filesize) == -1)
-	__leave;
+	__cygleave;
 
       mqinfo->mqi_magic = 0;          /* just in case */
       ipc_cond_close (mqinfo->mqi_waitsend);
@@ -1048,8 +1048,8 @@ mq_close (mqd_t mqd)
       free (mqinfo);
       return 0;
     }
-  __except (EBADF) {}
-  __endtry
+  __cygexcept (EBADF) {}
+  __cygendtry
   return -1;
 }
 
@@ -1097,7 +1097,7 @@ sem_open (const char *name, int oflag, ...)
   if (!check_path (semname, semaphore, name, len))
     return SEM_FAILED;
 
-  __try
+  __cygtry
     {
       oflag &= (O_CREAT | O_EXCL);
 
@@ -1124,14 +1124,14 @@ sem_open (const char *name, int oflag, ...)
 	  sf.value = value;
 	  sf.hash = hash_path_name (0, semname);
 	  if (write (fd, &sf, sizeof sf) != sizeof sf)
-	    __leave;
+	    __cygleave;
 	  sem = semaphore::open (sf.hash, sf.luid, fd, oflag, mode, value,
 				 wasopen);
 	  if (sem == SEM_FAILED)
-	    __leave;
+	    __cygleave;
 	  /* Initialization complete, turn off user-execute bit */
 	  if (fchmod (fd, mode) == -1)
-	    __leave;
+	    __cygleave;
 	  /* Don't close (fd); */
 	  return sem;
 	}
@@ -1142,7 +1142,7 @@ sem_open (const char *name, int oflag, ...)
 	{
 	  if (errno == ENOENT && (oflag & O_CREAT))
 	    goto again;
-	  __leave;
+	  __cygleave;
 	}
       /* Make certain initialization is complete */
       for (i = 0; i < MAX_TRIES; i++)
@@ -1155,7 +1155,7 @@ sem_open (const char *name, int oflag, ...)
 		  fd = -1;
 		  goto again;
 		}
-	      __leave;
+	      __cygleave;
 	    }
 	  if ((statbuff.st_mode & S_IXUSR) == 0)
 	    break;
@@ -1164,17 +1164,17 @@ sem_open (const char *name, int oflag, ...)
       if (i == MAX_TRIES)
 	{
 	  set_errno (ETIMEDOUT);
-	  __leave;
+	  __cygleave;
 	}
       if (file.lock (fd, sizeof sf))
-	__leave;
+	__cygleave;
       if (read (fd, &sf, sizeof sf) != sizeof sf)
-	__leave;
+	__cygleave;
       sem = semaphore::open (sf.hash, sf.luid, fd, oflag, mode, sf.value,
 			     wasopen);
       file.unlock (fd);
       if (sem == SEM_FAILED)
-	__leave;
+	__cygleave;
       /* If wasopen is set, the semaphore was already opened and we already have
 	 an open file descriptor pointing to the file.  This means, we have to
 	 close the file descriptor created in this call.  It won't be stored
@@ -1183,8 +1183,8 @@ sem_open (const char *name, int oflag, ...)
 	close (fd);
       return sem;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   /* Don't let following function calls change errno */
   save_errno save;
 

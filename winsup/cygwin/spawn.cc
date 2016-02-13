@@ -308,7 +308,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 
   system_call_handle system_call (mode == _P_SYSTEM);
 
-  __try
+  __cygtry
     {
       child_info_types chtype;
       if (mode == _P_OVERLAY)
@@ -331,13 +331,13 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	{
 	  set_errno (err);
 	  res = -1;
-	  __leave;
+	  __cygleave;
 	}
 
       res = newargv.setup (prog_arg, real_path, ext, ac, argv, p_type_exec);
 
       if (res)
-	__leave;
+	__cygleave;
 
       if (!real_path.iscygexec () && ::cygheap->cwd.get_error ())
 	{
@@ -346,7 +346,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 			::cygheap->cwd.get_error_desc ());
 	  set_errno (::cygheap->cwd.get_error ());
 	  res = -1;
-	  __leave;
+	  __cygleave;
 	}
 
       if (ac == 3 && argv[1][0] == '/' && tolower (argv[1][1]) == 'c' &&
@@ -378,7 +378,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 				 real_path.iscygexec ()))
 	    {
 	      res = -1;
-	      __leave;
+	      __cygleave;
 	    }
 
 
@@ -498,7 +498,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	    {
 	      set_errno (ENAMETOOLONG);
 	      res = -1;
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -519,7 +519,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	{
 	  set_errno (E2BIG);
 	  res = -1;
-	  __leave;
+	  __cygleave;
 	}
       set (chtype, real_path.iscygexec ());
       __stdin = in__stdin;
@@ -711,7 +711,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	    ::cygheap->user.reimpersonate ();
 
 	  res = -1;
-	  __leave;
+	  __cygleave;
 	}
 
       /* The CREATE_SUSPENDED case is handled below */
@@ -757,7 +757,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	      if (get_errno () != ENOMEM)
 		set_errno (EAGAIN);
 	      res = -1;
-	      __leave;
+	      __cygleave;
 	    }
 	  child->dwProcessId = pi.dwProcessId;
 	  child.hProcess = pi.hProcess;
@@ -779,7 +779,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	      CloseHandle (pi.hProcess);
 	      ForceCloseHandle (pi.hThread);
 	      res = -1;
-	      __leave;
+	      __cygleave;
 	    }
 	}
 
@@ -849,7 +849,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	  break;
 	}
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       if (get_errno () == ENOMEM)
 	set_errno (E2BIG);
@@ -857,7 +857,7 @@ child_info_spawn::worker (const char *prog_arg, const char *const *argv,
 	set_errno (EFAULT);
       res = -1;
     }
-  __endtry
+  __cygendtry
   this->cleanup ();
   if (envblock)
     free (envblock);
@@ -1119,7 +1119,7 @@ av::setup (const char *prog_arg, path_conv& real_path, const char *ext,
 	  }
 
 	{
-	  __try
+	  __cygtry
 	    {
 	      if (buf[0] == 'M' && buf[1] == 'Z')
 		{
@@ -1136,14 +1136,14 @@ av::setup (const char *prog_arg, path_conv& real_path, const char *ext,
 		  break;
 		}
 	    }
-	  __except (NO_ERROR)
+	  __cygexcept (NO_ERROR)
 	    {
 	      UnmapViewOfFile (buf);
 	      CloseHandle (hm);
 	      real_path.set_cygexec (false);
 	      break;
 	    }
-	  __endtry
+	  __cygendtry
 	}
 	CloseHandle (hm);
 

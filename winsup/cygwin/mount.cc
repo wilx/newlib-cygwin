@@ -1766,7 +1766,7 @@ mount (const char *win32_path, const char *posix_path, unsigned flags)
      isn't really supported except from fstab? */
   int res = -1;
 
-  __try
+  __cygtry
     {
       if (!*posix_path)
 	set_errno (EINVAL);
@@ -1812,8 +1812,8 @@ mount (const char *win32_path, const char *posix_path, unsigned flags)
       syscall_printf ("%R = mount(%s, %s, %y)",
 		      res, win32_path, posix_path, flags);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -1825,17 +1825,17 @@ mount (const char *win32_path, const char *posix_path, unsigned flags)
 extern "C" int
 umount (const char *path)
 {
-  __try
+  __cygtry
     {
       if (!*path)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       return cygwin_umount (path, 0);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 

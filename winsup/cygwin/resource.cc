@@ -169,7 +169,7 @@ get_rlimit_stack (void)
 extern "C" int
 getrlimit (int resource, struct rlimit *rlp)
 {
-  __try
+  __cygtry
     {
       rlp->rlim_cur = RLIM_INFINITY;
       rlp->rlim_max = RLIM_INFINITY;
@@ -195,12 +195,12 @@ getrlimit (int resource, struct rlimit *rlp)
 	  break;
 	default:
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       return 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }
 
@@ -214,7 +214,7 @@ setrlimit (int resource, const struct rlimit *rlp)
   if (getrlimit (resource, &oldlimits) < 0)
     return -1;
 
-  __try
+  __cygtry
     {
       if (oldlimits.rlim_cur == rlp->rlim_cur &&
 	  oldlimits.rlim_max == rlp->rlim_max)
@@ -224,7 +224,7 @@ setrlimit (int resource, const struct rlimit *rlp)
       if (rlp->rlim_cur > rlp->rlim_max)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       switch (resource)
@@ -241,11 +241,11 @@ setrlimit (int resource, const struct rlimit *rlp)
 	  break;
 	default:
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       return 0;
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   return -1;
 }

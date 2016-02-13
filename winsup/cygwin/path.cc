@@ -674,7 +674,7 @@ path_conv::check (const char *src, unsigned opt,
     }
 #endif
 
-  __try
+  __cygtry
     {
       int loop = 0;
       path_flags = 0;
@@ -1262,11 +1262,11 @@ path_conv::check (const char *src, unsigned opt,
 	}
 #endif
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       error = EFAULT;
     }
-  __endtry
+  __cygendtry
 }
 
 path_conv::~path_conv ()
@@ -1728,18 +1728,18 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
   /* POSIX says that empty 'newpath' is invalid input while empty
      'oldpath' is valid -- it's symlink resolver job to verify if
      symlink contents point to existing filesystem object */
-  __try
+  __cygtry
     {
       if (!*oldpath || !*newpath)
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
 
       if (strlen (oldpath) > SYMLINK_MAX)
 	{
 	  set_errno (ENAMETOOLONG);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Trailing dirsep is a no-no. */
@@ -1772,7 +1772,7 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
 	  if (wincap.max_sys_priv () < SE_CREATE_SYMBOLIC_LINK_PRIVILEGE)
 	    {
 	      set_errno (EPERM);
-	      __leave;
+	      __cygleave;
 	    }
 	  wsym_type = WSYM_nativestrict;
 	}
@@ -1793,7 +1793,7 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
       if (win32_newpath.error)
 	{
 	  set_errno (win32_newpath.error);
-	  __leave;
+	  __cygleave;
 	}
 
       syscall_printf ("symlink (%s, %S) wsym_type %d", oldpath,
@@ -1803,12 +1803,12 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
 	  || win32_newpath.is_auto_device ())
 	{
 	  set_errno (EEXIST);
-	  __leave;
+	  __cygleave;
 	}
       if (has_trailing_dirsep && !win32_newpath.exists ())
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
 
       /* Handle NFS and native symlinks in their own functions. */
@@ -1816,18 +1816,18 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
 	{
 	case WSYM_nfs:
 	  res = symlink_nfs (oldpath, win32_newpath);
-	  __leave;
+	  __cygleave;
 	case WSYM_native:
 	case WSYM_nativestrict:
 	  res = symlink_native (oldpath, win32_newpath);
 	  if (!res)
-	    __leave;
+	    __cygleave;
 	  /* Strictly native?  Too bad, unless the target is a Cygwin
 	     special file. */
 	  if (res == -1 && wsym_type == WSYM_nativestrict)
 	    {
 	      __seterrno ();
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Otherwise, fall back to default symlink type. */
 	  wsym_type = WSYM_sysfile;
@@ -1999,14 +1999,14 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	  status = NtSetAttributesFile (fh, FILE_ATTRIBUTE_NORMAL);
 	  NtClose (fh);
 	  if (!NT_SUCCESS (status))
 	    {
 	      __seterrno_from_nt_status (status);
-	      __leave;
+	      __cygleave;
 	    }
 	}
       else if (!isdevice && win32_newpath.has_acls ()
@@ -2033,7 +2033,7 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
       if (!NT_SUCCESS (status))
 	{
 	  __seterrno_from_nt_status (status);
-	  __leave;
+	  __cygleave;
 	}
       if (io.Information == FILE_CREATED && win32_newpath.has_acls ())
 	set_created_file_access (fh, win32_newpath,
@@ -2062,8 +2062,8 @@ symlink_worker (const char *oldpath, const char *newpath, bool isdevice)
       NtClose (fh);
 
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   syscall_printf ("%d = symlink_worker(%s, %s, %d)",
 		  res, oldpath, newpath, isdevice);
   if (has_trailing_dirsep)
@@ -3175,15 +3175,15 @@ getcwd (char *buf, size_t ulen)
 {
   char* res = NULL;
 
-  __try
+  __cygtry
     {
       if (ulen == 0 && buf)
 	set_errno (EINVAL);
       else
 	res = cygheap->cwd.get (buf, 1, 1, ulen);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -3220,12 +3220,12 @@ chdir (const char *in_dir)
 {
   int res = -1;
 
-  __try
+  __cygtry
     {
       if (!*in_dir)
 	{
 	  set_errno (ENOENT);
-	  __leave;
+	  __cygleave;
 	}
 
       syscall_printf ("dir '%s'", in_dir);
@@ -3237,7 +3237,7 @@ chdir (const char *in_dir)
 	{
 	  set_errno (path.error);
 	  syscall_printf ("-1 = chdir (%s)", in_dir);
-	  __leave;
+	  __cygleave;
 	}
 
       const char *posix_cwd = NULL;
@@ -3271,11 +3271,11 @@ chdir (const char *in_dir)
       syscall_printf ("%R = chdir() cygheap->cwd.posix '%s' native '%S'", res,
 		      cygheap->cwd.get_posix (), path.get_nt_native_path ());
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       res = -1;
     }
-  __endtry
+  __cygendtry
   MALLOC_CHECK;
   return res;
 }
@@ -3322,12 +3322,12 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
   what &= CCP_CONVTYPE_MASK;
   int ret = -1;
 
-  __try
+  __cygtry
     {
       if (!from)
 	{
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
 
       switch (what)
@@ -3341,7 +3341,7 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	    if (p.error)
 	      {
 	        set_errno (p.error);
-		__leave;
+		__cygleave;
 	      }
 	    PUNICODE_STRING up = p.get_nt_native_path ();
 	    buf = tp.c_get ();
@@ -3386,7 +3386,7 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	  if (p.error)
 	    {
 	      set_errno (p.error);
-	      __leave;
+	      __cygleave;
 	    }
 	  /* Relative Windows paths are always restricted to MAX_PATH chars. */
 	  if ((how & CCP_RELATIVE) && !isabspath (p.get_win32 ())
@@ -3398,7 +3398,7 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	      if (p.error)
 		{
 		  set_errno (p.error);
-		  __leave;
+		  __cygleave;
 		}
 	    }
 	  lsiz = p.get_wide_win32_path_len () + 1;
@@ -3448,7 +3448,7 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	  if (error)
 	    {
 	      set_errno (p.error);
-	      __leave;
+	      __cygleave;
 	    }
 	  lsiz = strlen (buf) + 1;
 	  break;
@@ -3459,23 +3459,23 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	  if (error)
 	    {
 	      set_errno (error);
-	      __leave;
+	      __cygleave;
 	    }
 	  lsiz = strlen (buf) + 1;
 	  break;
 	default:
 	  set_errno (EINVAL);
-	  __leave;
+	  __cygleave;
 	}
       if (!size)
 	{
 	  ret = lsiz;
-	  __leave;
+	  __cygleave;
 	}
       if (size < lsiz)
 	{
 	  set_errno (ENOSPC);
-	  __leave;
+	  __cygleave;
 	}
       switch (what)
 	{
@@ -3490,8 +3490,8 @@ cygwin_conv_path (cygwin_conv_path_t what, const void *from, void *to,
 	}
       ret = 0;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return ret;
 }
 
@@ -3563,7 +3563,7 @@ realpath (const char *__restrict path, char *__restrict resolved)
 
   /* Guard reading from a potentially invalid path and writing to a
      potentially invalid resolved. */
-  __try
+  __cygtry
     {
       /* Win32 drive letter paths have to be converted to a POSIX path first,
 	 because path_conv leaves the incoming path untouched except for
@@ -3603,8 +3603,8 @@ realpath (const char *__restrict path, char *__restrict resolved)
 	resolved[0] = '\0';
       set_errno (real_path.error ?: ENOENT);
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return NULL;
 }
 

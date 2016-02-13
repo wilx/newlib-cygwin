@@ -197,7 +197,7 @@ handle_sigprocmask (int how, const sigset_t *set, sigset_t *oldset, sigset_t& op
       return EINVAL;
     }
 
-  __try
+  __cygtry
 	{
       if (oldset)
 	*oldset = opmask;
@@ -223,11 +223,11 @@ handle_sigprocmask (int how, const sigset_t *set, sigset_t *oldset, sigset_t& op
 	  set_signal_mask (opmask, newmask);
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       return EFAULT;
     }
-  __endtry
+  __cygendtry
   return 0;
 }
 
@@ -386,7 +386,7 @@ sigaction_worker (int sig, const struct sigaction *newact,
 		  struct sigaction *oldact, bool isinternal)
 {
   int res = -1;
-  __try
+  __cygtry
     {
       sig_dispatch_pending ();
       /* check that sig is in right range */
@@ -407,7 +407,7 @@ sigaction_worker (int sig, const struct sigaction *newact,
 	      if (sig == SIGKILL || sig == SIGSTOP)
 		{
 		  set_errno (EINVAL);
-		  __leave;
+		  __cygleave;
 		}
 	      struct sigaction na = *newact;
 	      struct sigaction& gs = global_sigs[sig];
@@ -436,8 +436,8 @@ sigaction_worker (int sig, const struct sigaction *newact,
 	    res = 0;
 	}
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return res;
 }
 
@@ -576,7 +576,7 @@ sigwaitinfo (const sigset_t *set, siginfo_t *info)
 
   pthread_testcancel ();
 
-  __try
+  __cygtry
     {
       set_signal_mask (_my_tls.sigwait_mask, *set);
       sig_dispatch_pending (true);
@@ -603,10 +603,10 @@ sigwaitinfo (const sigset_t *set, siginfo_t *info)
 	  break;
 	}
     }
-  __except (EFAULT) {
+  __cygexcept (EFAULT) {
     res = -1;
   }
-  __endtry
+  __cygendtry
   sigproc_printf ("returning signal %d", res);
   return res;
 }
@@ -636,7 +636,7 @@ sigaltstack (const stack_t *ss, stack_t *oss)
 {
   _cygtls& me = _my_tls;
 
-  __try
+  __cygtry
     {
       if (ss)
 	{
@@ -689,10 +689,10 @@ sigaltstack (const stack_t *ss, stack_t *oss)
 	    }
 	}
     }
-  __except (EFAULT)
+  __cygexcept (EFAULT)
     {
       return EFAULT;
     }
-  __endtry
+  __cygendtry
   return 0;
 }

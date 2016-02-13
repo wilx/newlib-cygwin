@@ -146,7 +146,7 @@ ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts,
   int timeout;
   sigset_t oldset = _my_tls.sigmask;
 
-  __try
+  __cygtry
     {
       timeout = (timeout_ts == NULL)
 		? -1
@@ -158,7 +158,7 @@ ppoll (struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts,
 	set_signal_mask (_my_tls.sigmask, oldset);
       return ret;
     }
-  __except (EFAULT) {}
-  __endtry
+  __cygexcept (EFAULT) {}
+  __cygendtry
   return -1;
 }

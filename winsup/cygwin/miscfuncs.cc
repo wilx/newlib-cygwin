@@ -202,7 +202,7 @@ check_iovec (const struct iovec *iov, int iovcnt, bool forwrite)
       return -1;
     }
 
-  __try
+  __cygtry
     {
 
       size_t tot = 0;
@@ -212,7 +212,7 @@ check_iovec (const struct iovec *iov, int iovcnt, bool forwrite)
 	  if (iov->iov_len > SSIZE_MAX || (tot += iov->iov_len) > SSIZE_MAX)
 	    {
 	      set_errno (EINVAL);
-	      __leave;
+	      __cygleave;
 	    }
 
 	  volatile char *p = ((char *) iov->iov_base) + iov->iov_len - 1;
@@ -231,8 +231,8 @@ check_iovec (const struct iovec *iov, int iovcnt, bool forwrite)
 
       return (ssize_t) tot;
     }
-  __except (EFAULT)
-  __endtry
+  __cygexcept (EFAULT)
+  __cygendtry
   return -1;
 }
 
@@ -515,7 +515,7 @@ slashify (const char *src, char *dst, bool trailing_slash_p)
 void * __reg1
 __import_address (void *imp)
 {
-  __try
+  __cygtry
     {
       if (*((uint16_t *) imp) == 0x25ff)
 	{
@@ -529,8 +529,8 @@ __import_address (void *imp)
 	  return (void *) *jmpto;
 	}
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
   return NULL;
 }
 

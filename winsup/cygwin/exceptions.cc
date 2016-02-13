@@ -375,7 +375,7 @@ cygwin_exception::dumpstack ()
 {
   static bool already_dumped;
 
-  __try
+  __cygtry
     {
       if (already_dumped || cygheap->rlim_core == 0Ul)
 	return;
@@ -407,8 +407,8 @@ cygwin_exception::dumpstack ()
       if (h)
 	NtClose (h);
     }
-  __except (NO_ERROR) {}
-  __endtry
+  __cygexcept (NO_ERROR) {}
+  __cygendtry
 }
 
 bool
@@ -607,7 +607,7 @@ exception::myfault (EXCEPTION_RECORD *e, exception_list *frame, CONTEXT *in,
    handling considers the current (alternate) stack "broken".  However, it
    still calls vectored exception handlers.
 
-   TODO: What we do here is to handle only __try/__except blocks in Cygwin.
+   TODO: What we do here is to handle only __cygtry/__cygexcept blocks in Cygwin.
          "Normal" exceptions will simply exit the process.  Still, better
 	 than nothing... */
 LONG WINAPI

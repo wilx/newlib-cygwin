@@ -217,15 +217,15 @@ getlogin_r (char *name, size_t namesize)
   size_t len = strlen (login) + 1;
   if (len > namesize)
     return ERANGE;
-  __try
+  __cygtry
     {
       strncpy (name, login, len);
     }
-  __except (NO_ERROR)
+  __cygexcept (NO_ERROR)
     {
       return EFAULT;
     }
-  __endtry
+  __cygendtry
   return 0;
 }
 
