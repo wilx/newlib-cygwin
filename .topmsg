@@ -1,0 +1,6 @@
+From: Vaclav Haisman <vhaisman@gmail.com>
+Subject: [PATCH] t/c++14/minimal-changes
+
+This patch introduced minimal changes to build system and source so that it
+compiles as GNU C++14 source.
+
