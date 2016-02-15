@@ -1,6 +1,7 @@
 From: Vaclav Haisman <vhaisman@gmail.com>
-Subject: [PATCH] t/c++14/minimal-changes
+Subject: [PATCH] Build as C++14 source
 
 This patch introduced minimal changes to build system and source so that it
-compiles as GNU C++14 source.
+compiles as GNU C++14 source. It resolves namespace conflicts between GCC and
+Cygwin on macros like __try, __except, etc., by renaming those defined by Cygwin.
 
